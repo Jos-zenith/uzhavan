@@ -27,6 +27,7 @@
     "scripts":  {
                     "setup:project":  "node scripts/project-setup.js",
                     "setup:verify":  "node scripts/project-setup.js --verify",
+                    "dev":  "craco start",
                     "start":  "craco start",
                     "build":  "craco build",
                     "test":  "craco test",
