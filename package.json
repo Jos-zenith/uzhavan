@@ -27,7 +27,7 @@
   "scripts": {
     "setup:project": "node scripts/project-setup.js",
     "setup:verify": "node scripts/project-setup.js --verify",
-    "dev": "craco start",
+    "dev": "npm --prefix docs-site start -- --port 3000",
     "start": "craco start",
     "build": "craco build",
     "test": "craco test",

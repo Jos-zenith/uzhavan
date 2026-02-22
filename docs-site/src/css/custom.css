@@ -124,3 +124,69 @@ body {
 .markdown h3 {
   color: #f1f7ff;
 }
+
+/* Smooth scrolling for sidebar navigation */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Sidebar hover transitions */
+.menu__link {
+  transition: background 0.2s ease, color 0.2s ease, padding-left 0.2s ease;
+}
+
+.menu__link:hover {
+  padding-left: 12px;
+}
+
+/* Category label styling */
+.menu__list-item-collapsible .menu__link {
+  color: #8ba5c7;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Table styling for dark theme */
+.markdown table {
+  border: 1px solid rgba(120, 168, 240, 0.2);
+}
+
+.markdown table th {
+  background: rgba(24, 38, 68, 0.6);
+  color: #e6f1ff;
+  font-weight: 700;
+}
+
+.markdown table td {
+  border-color: rgba(120, 168, 240, 0.12);
+}
+
+.markdown table tr:hover td {
+  background: rgba(77, 245, 181, 0.04);
+}
+
+/* Inline code styling */
+.markdown code {
+  background: rgba(120, 168, 240, 0.12);
+  border: 1px solid rgba(120, 168, 240, 0.15);
+  color: #4df5b5;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.88em;
+}
+
+/* Pagination nav hover */
+.pagination-nav__link:hover {
+  border-color: rgba(77, 245, 181, 0.4);
+  background: rgba(8, 14, 26, 0.95);
+}
+
+/* Breadcrumb styling */
+.breadcrumbs__link {
+  color: #9bb4d6;
+}
+
+.breadcrumbs__link:hover {
+  color: #4df5b5;
+}

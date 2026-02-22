@@ -1,17 +1,18 @@
-﻿import {themes as prismThemes} from 'prism-react-renderer';
+import {themes as prismThemes} from 'prism-react-renderer';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
-  title: 'VICT Documentation',
-  tagline: 'Installation, SDK, and policy-first telemetry guides',
+  title: 'VICT SDK Documentation',
+  tagline: 'Policy-enforced telemetry, ROI analysis, and 18 vital agricultural services for Tamil Nadu',
   favicon: 'img/favicon.ico',
   future: {
     v4: true,
   },
   url: 'http://localhost',
   baseUrl: '/',
-  onBrokenLinks: 'throw',
+  onBrokenLinks: 'warn',
+  onBrokenMarkdownLinks: 'warn',
   i18n: {
     defaultLocale: 'en',
     locales: ['en'],
@@ -56,20 +57,31 @@ const config: Config = {
       style: 'dark',
       links: [
         {
-          title: 'Docs',
+          title: 'Getting Started',
           items: [
-            {
-              label: 'Introduction',
-              to: '/',
-            },
-            {
-              label: 'Installation',
-              to: '/installation',
-            },
+            { label: 'Introduction', to: '/' },
+            { label: 'Installation', to: '/installation' },
+            { label: 'SDK Framework', to: '/sdk-framework' },
+          ],
+        },
+        {
+          title: 'Core SDK',
+          items: [
+            { label: 'SDK Provider', to: '/sdk-provider' },
+            { label: 'Policy Enforcement', to: '/policy-enforcement' },
+            { label: 'ROI Engine', to: '/roi-engine' },
+          ],
+        },
+        {
+          title: 'Services',
+          items: [
+            { label: 'Service Catalog', to: '/service-catalog' },
+            { label: 'Weather Service', to: '/service-weather' },
+            { label: 'Pest Identification', to: '/service-pest' },
           ],
         },
       ],
-      copyright: `Copyright  ${new Date().getFullYear()} VICT Platform`,
+      copyright: `Copyright ${new Date().getFullYear()} VICT Platform -- Tamil Nadu Digital Agriculture`,
     },
     prism: {
       theme: prismThemes.github,

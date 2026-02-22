@@ -5,50 +5,46 @@ import styles from './styles.module.css';
 
 type FeatureItem = {
   title: string;
-  Svg: React.ComponentType<React.ComponentProps<'svg'>>;
   description: ReactNode;
 };
 
 const FeatureList: FeatureItem[] = [
   {
-    title: 'Easy to Use',
-    Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
+    title: 'Policy-First Telemetry',
     description: (
       <>
-        Docusaurus was designed from the ground up to be easily installed and
-        used to get your website up and running quickly.
+        Every event is linked to one of 16 pre-defined Business Policies.
+        No rogue tracking -- the SDK enforces schema validation, required fields,
+        and velocity limits at the API level.
       </>
     ),
   },
   {
-    title: 'Focus on What Matters',
-    Svg: require('@site/static/img/undraw_docusaurus_tree.svg').default,
+    title: 'Offline-First Architecture',
     description: (
       <>
-        Docusaurus lets you focus on your docs, and we&apos;ll do the chores. Go
-        ahead and move your docs into the <code>docs</code> directory.
+        Built for rural Tamil Nadu where connectivity is intermittent. Events queue
+        locally with AES encryption, batch-flush on reconnect, and zero data loss
+        across 12 SQLite tables.
       </>
     ),
   },
   {
-    title: 'Powered by React',
-    Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
+    title: 'ROI Engine',
     description: (
       <>
-        Extend or customize your website layout by reusing React. Docusaurus can
-        be extended while reusing the same header and footer.
+        Dual-layer ROI computation: real-time dashboards from telemetry events plus
+        predictive district-proxy baselines with 3-sigma anomaly detection and
+        adoption stage modeling.
       </>
     ),
   },
 ];
 
-function Feature({title, Svg, description}: FeatureItem) {
+function Feature({title, description}: FeatureItem) {
   return (
     <div className={clsx('col col--4')}>
-      <div className="text--center">
-        <Svg className={styles.featureSvg} role="img" />
-      </div>
-      <div className="text--center padding-horiz--md">
+      <div className="text--center padding-horiz--md" style={{paddingTop: '2rem'}}>
         <Heading as="h3">{title}</Heading>
         <p>{description}</p>
       </div>
