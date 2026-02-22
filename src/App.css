@@ -1,0 +1,204 @@
+.App {
+  min-height: 100vh;
+  background: #f5f8fc;
+  color: #1c3550;
+  text-align: left;
+}
+
+.App-shell {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.App-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.App-header h1 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.status-text {
+  margin: 6px 0 0;
+  color: #4b6786;
+}
+
+.connectivity-chip {
+  background: #fff;
+  border: 1px solid #d9e7fb;
+  border-radius: 999px;
+  padding: 8px 12px;
+  white-space: nowrap;
+}
+
+.app-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.nav-btn {
+  border: 1px solid #cfe0fb;
+  border-radius: 10px;
+  padding: 9px 14px;
+  background: #fff;
+  color: #1f4a79;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.nav-btn.active {
+  background: #1f4a79;
+  color: #fff;
+  border-color: #1f4a79;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+}
+
+.summary-card {
+  background: #fff;
+  border: 1px solid #d9e7fb;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.summary-card h3 {
+  margin: 0;
+  color: #49688b;
+  font-size: 0.95rem;
+}
+
+.summary-card p {
+  margin: 10px 0 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #173a63;
+}
+
+.panel {
+  background: #fff;
+  border: 1px solid #d9e7fb;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.prompt-box {
+  border: 1px solid #cfe0fb;
+  background: #f7fbff;
+  border-radius: 10px;
+  padding: 12px;
+  margin: 0 0 12px;
+}
+
+.prompt-box p {
+  margin: 0;
+}
+
+.prompt-actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+}
+
+.prompt-actions button {
+  border: 1px solid #cfe0fb;
+  border-radius: 8px;
+  background: #fff;
+  color: #1f4a79;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.draft-form {
+  border: 1px solid #e4eefc;
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.draft-form label {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+}
+
+.draft-form input {
+  margin-top: 6px;
+  padding: 9px 10px;
+  border: 1px solid #cfe0fb;
+  border-radius: 8px;
+}
+
+.saved-meta {
+  margin: 6px 0 0;
+  color: #4b6786;
+}
+
+.services-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.services-toolbar h2 {
+  margin: 0;
+}
+
+.services-toolbar input {
+  width: min(420px, 100%);
+  border: 1px solid #cfe0fb;
+  border-radius: 8px;
+  padding: 9px 10px;
+}
+
+.service-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 10px;
+}
+
+.service-card {
+  border: 1px solid #e4eefc;
+  border-radius: 10px;
+  padding: 12px;
+  background: #fbfdff;
+}
+
+.service-card h3 {
+  margin: 0 0 8px;
+  font-size: 1.02rem;
+}
+
+.service-card p {
+  margin: 5px 0;
+  color: #355578;
+}
+
+.roi-panel {
+  padding: 0;
+  overflow: hidden;
+}
+
+@media (max-width: 860px) {
+  .App-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .services-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
