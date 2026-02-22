@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "cd docs-site && npx docusaurus start --port 3000 --host 0.0.0.0",
+    "dev": "node scripts/start-docs.js",
     "build": "cd docs-site && npm run build",
     "serve": "cd docs-site && npm run serve",
     "setup:project": "node scripts/project-setup.js",
