@@ -1,0 +1,85 @@
+.roi-screen {
+  padding: 20px;
+  background: #f7fbff;
+  color: #16354e;
+}
+
+.roi-screen h1 {
+  margin: 0 0 8px;
+}
+
+.roi-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  margin: 16px 0;
+}
+
+.roi-card {
+  background: #fff;
+  border: 1px solid #dbe9ff;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.roi-card h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #35608a;
+}
+
+.roi-card p {
+  margin: 8px 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
+.table-wrap {
+  margin-top: 18px;
+  background: #fff;
+  border: 1px solid #dbe9ff;
+  border-radius: 12px;
+  padding: 12px;
+  overflow-x: auto;
+}
+
+.table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-wrap th,
+.table-wrap td {
+  border-bottom: 1px solid #eef4ff;
+  padding: 10px 8px;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.table-wrap th {
+  color: #3d6387;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.action.scale {
+  color: #1b8f35;
+  font-weight: 700;
+}
+
+.action.iterate {
+  color: #c06e00;
+  font-weight: 700;
+}
+
+.action.retire {
+  color: #b62121;
+  font-weight: 700;
+}
+
+@media (max-width: 760px) {
+  .roi-screen {
+    padding: 14px;
+  }
+}
