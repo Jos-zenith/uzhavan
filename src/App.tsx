@@ -21,6 +21,13 @@ import RoiPortfolioScreen from './RoiPortfolioScreen';
 import AdminPanelScreen from './AdminPanelScreen';
 import DeveloperToolsScreen from './DeveloperToolsScreen';
 import SyncStatusScreen from './SyncStatusScreen';
+import { WeatherForecastScreen } from './WeatherForecastScreen';
+import { OfficerContactInfoScreen } from './OfficerContactInfoScreen';
+import { UserFeedbackScreen } from './UserFeedbackScreen';
+import { OrganicFarmingInfoScreen } from './OrganicFarmingInfoScreen';
+import { FpoProductsScreen } from './FpoProductsScreen';
+import { AtmaTrainingRegistrationScreen } from './AtmaTrainingRegistrationScreen';
+import { UzhavanEMarketScreen } from './UzhavanEMarketScreen';
 
 const BENEFIT_REGISTRATION_SERVICE_ID = 2;
 const BENEFIT_DRAFT_KEY = 'benefit_registration';
@@ -43,10 +50,13 @@ type AppView =
   | 'overview'
   | 'draft'
   | 'services'
+  | 'serviceScreens'
   | 'sync'
   | 'roi'
   | 'admin'
   | 'developer';
+
+type ServiceScreenKey = 'weather' | 'officer' | 'feedback' | 'organic' | 'fpo' | 'atma' | 'market';
 
 function App() {
   const [status, setStatus] = React.useState('Initializing offline foundation...');
@@ -62,6 +72,7 @@ function App() {
   );
   const [activeView, setActiveView] = React.useState<AppView>('overview');
   const [serviceSearch, setServiceSearch] = React.useState('');
+  const [activeServiceScreen, setActiveServiceScreen] = React.useState<ServiceScreenKey>('weather');
 
   const refreshDraftAnalytics = React.useCallback(async () => {
     const analytics = await getDraftAbandonmentAnalytics(
@@ -220,6 +231,12 @@ function App() {
             Services
           </button>
           <button
+            className={activeView === 'serviceScreens' ? 'nav-btn active' : 'nav-btn'}
+            onClick={() => setActiveView('serviceScreens')}
+          >
+            Service Screens
+          </button>
+          <button
             className={activeView === 'sync' ? 'nav-btn active' : 'nav-btn'}
             onClick={() => setActiveView('sync')}
           >
@@ -358,6 +375,34 @@ function App() {
                 </article>
               ))}
             </div>
+          </section>
+        )}
+
+        {activeView === 'serviceScreens' && (
+          <section className="panel">
+            <div className="services-toolbar">
+              <h2>Service Screens</h2>
+              <select
+                value={activeServiceScreen}
+                onChange={(event) => setActiveServiceScreen(event.target.value as ServiceScreenKey)}
+              >
+                <option value="weather">#8 Daily Weather Forecast</option>
+                <option value="officer">#9 Officer Contact Info</option>
+                <option value="feedback">#12 User Feedback</option>
+                <option value="organic">#14 Organic Farming Info</option>
+                <option value="fpo">#15 FPO Products</option>
+                <option value="atma">#17 ATMA Training Registration</option>
+                <option value="market">#18 Uzhavan e-Market</option>
+              </select>
+            </div>
+
+            {activeServiceScreen === 'weather' && <WeatherForecastScreen />}
+            {activeServiceScreen === 'officer' && <OfficerContactInfoScreen />}
+            {activeServiceScreen === 'feedback' && <UserFeedbackScreen />}
+            {activeServiceScreen === 'organic' && <OrganicFarmingInfoScreen />}
+            {activeServiceScreen === 'fpo' && <FpoProductsScreen />}
+            {activeServiceScreen === 'atma' && <AtmaTrainingRegistrationScreen />}
+            {activeServiceScreen === 'market' && <UzhavanEMarketScreen />}
           </section>
         )}
 

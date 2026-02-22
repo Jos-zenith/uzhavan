@@ -27,6 +27,11 @@ export type VitalService = {
   dependencies: string;
 };
 
+export type ServiceCachePayload = Record<
+  string,
+  string | number | boolean | Array<string | number | boolean>
+>;
+
 export type DraftRecord = {
   id: number;
   serviceId: number;
@@ -838,6 +843,31 @@ export async function getVitalServices(): Promise<VitalService[]> {
     FROM vital_services
     ORDER BY id ASC;`
   );
+}
+
+export async function getServiceCachePayload(
+  serviceId: number
+): Promise<ServiceCachePayload | null> {
+  const db = await getDatabase();
+  const secret = getOrCreateEncryptionSecret();
+
+  const row = await db.getFirstAsync<{ encrypted_payload: string }>(
+    `SELECT encrypted_payload
+     FROM service_cache
+     WHERE service_id = ?
+     LIMIT 1;`,
+    [serviceId]
+  );
+
+  if (!row) {
+    return null;
+  }
+
+  try {
+    return await decryptJson<ServiceCachePayload>(row.encrypted_payload, secret);
+  } catch {
+    return null;
+  }
 }
 
 function getServicePriority(serviceId: number): number {

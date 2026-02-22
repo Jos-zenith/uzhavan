@@ -13,7 +13,7 @@ import {
   BlockData,
   RegistrationStats,
 } from './benefitRegistrationService';
-import { useVictori } from './victoriSdk';
+import { useVictori, BUSINESS_POLICIES } from './victoriSdk';
 
 export type UseBenefitRegistrationReturn = {
   schemes: BenefitScheme[];
@@ -61,11 +61,11 @@ export function useBenefitRegistration(): UseBenefitRegistrationReturn {
       setSchemes(data);
 
       track({
-        eventId: 'ANY_EVENT_WITH_LOCATION',
+        policyId: BUSINESS_POLICIES.POL_BENEFIT_REGISTRATION,
+        eventId: 'REGISTRATION_FORM_VIEWED',
         payload: {
-          action: 'view_benefit_schemes',
-          schemeCount: data.length,
-          serviceId: 2,
+          farmerId: 'anonymous_farmer',
+          schemeId: 'all_schemes',
         },
       });
     } catch (err: any) {
@@ -112,15 +112,16 @@ export function useBenefitRegistration(): UseBenefitRegistrationReturn {
         );
 
         track({
-          eventId: 'ANY_EVENT_WITH_LOCATION',
+          policyId: BUSINESS_POLICIES.POL_BENEFIT_REGISTRATION,
+          eventId: 'REGISTRATION_SUBMITTED',
           payload: {
-            action: 'benefit_registered',
-            registrationId: registration.registrationId,
+            farmerId: farmerDetails.mobileNumber,
             schemeId,
-            district: farmerDetails.districtName,
-            block: farmerDetails.blockName,
-            lgdDistrictCode: farmerDetails.lgdDistrictCode,
-            serviceId: 2,
+            aadhaarNumber: farmerDetails.aadhaarNumber,
+            bankAccountNumber: farmerDetails.bankAccountNumber,
+            landArea: farmerDetails.landArea,
+            cropType: farmerDetails.cropType,
+            bankIfsc: farmerDetails.ifscCode,
           },
         });
 

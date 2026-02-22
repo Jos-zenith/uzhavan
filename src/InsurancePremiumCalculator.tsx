@@ -12,7 +12,7 @@ import {
   InsuranceProvider,
   CropInsuranceType,
 } from './insuranceService';
-import { useVictori } from './victoriSdk';
+import { useVictori, BUSINESS_POLICIES } from './victoriSdk';
 
 export type UseInsuranceReturn = {
   calculation: PremiumCalculation | null;
@@ -57,14 +57,11 @@ export function useInsurance(): UseInsuranceReturn {
           
           // Track calculation event
           track({
-            eventId: 'INSURANCE_PREMIUM_CALCULATED',
+            policyId: BUSINESS_POLICIES.POL_FARMING_GUIDANCE,
+            eventId: 'GUIDANCE_ARTICLE_VIEWED',
             payload: {
-              cropName: result.cropName,
-              season: result.season,
-              areaInHectares: result.areaInHectares,
-              premiumAmount: result.farmerPremiumAmount,
-              sumInsured: result.sumInsured,
-              serviceId: 13,
+              articleId: `pmfby_premium_${result.cropName.toLowerCase()}_${result.season}`,
+              topicId: 'crop_insurance',
             },
           });
 
@@ -84,11 +81,11 @@ export function useInsurance(): UseInsuranceReturn {
   const openPMFBYPortal = useCallback(() => {
     insuranceService.openPMFBYPortal();
     track({
-      eventId: 'INSURANCE_PREMIUM_CALCULATED',
+      policyId: BUSINESS_POLICIES.POL_FARMING_GUIDANCE,
+      eventId: 'GUIDANCE_SHARED',
       payload: {
-        action: 'open_pmfby_portal',
-        url: insuranceService.getPMFBYUrl(),
-        serviceId: 13,
+        articleId: 'pmfby_portal_guide',
+        shareMethod: 'external_portal',
       },
     });
   }, [track]);
@@ -96,10 +93,11 @@ export function useInsurance(): UseInsuranceReturn {
   const openPMFBYCalculator = useCallback(() => {
     insuranceService.openPMFBYCalculator();
     track({
-      eventId: 'INSURANCE_PREMIUM_CALCULATED',
+      policyId: BUSINESS_POLICIES.POL_FARMING_GUIDANCE,
+      eventId: 'GUIDANCE_SHARED',
       payload: {
-        action: 'open_pmfby_calculator',
-        serviceId: 13,
+        articleId: 'pmfby_calculator_guide',
+        shareMethod: 'official_calculator',
       },
     });
   }, [track]);

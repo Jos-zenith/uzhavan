@@ -10,7 +10,7 @@ import {
   PriceComparison,
   SellingRecommendation,
 } from './marketPriceService';
-import { useVictori } from './victoriSdk';
+import { useVictori, BUSINESS_POLICIES } from './victoriSdk';
 
 export type UseMarketPriceReturn = {
   prices: MarketPriceResponse | null;
@@ -55,12 +55,12 @@ export function useMarketPrice(
 
         // Track event
         track({
-          eventId: 'MARKET_PRICE_VIEWED',
+          policyId: BUSINESS_POLICIES.POL_MARKET_PRICING,
+          eventId: 'PRICE_QUERY',
           payload: {
-            market,
             commodity: commodity || 'all',
-            priceCount: response.prices.length,
-            source: response.source,
+            district: response.market.district,
+            queryCount: response.prices.length,
           },
         });
       } catch (err: any) {

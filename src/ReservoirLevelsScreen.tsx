@@ -12,7 +12,7 @@ import {
   ReservoirStatistics,
   IrrigationRecommendation,
 } from './reservoirService';
-import { useVictori } from './victoriSdk';
+import { useVictori, BUSINESS_POLICIES } from './victoriSdk';
 
 export type UseReservoirReturn = {
   reservoirs: ReservoirData[];
@@ -56,17 +56,17 @@ export function useReservoir(): UseReservoirReturn {
       setAlerts(alertData);
       setStatistics(stats);
 
-      // Track event
-      track({
-        eventId: 'OFFLINE_ACCESS_AT_CRITICAL_LEVEL',
-        payload: {
-          action: 'view_all_reservoirs',
-          reservoirCount: data.length,
-          criticalCount: stats.criticalCount,
-          averagePercentage: stats.averagePercentageFull,
-          serviceId: 10,
-        },
-      });
+      if (data.length > 0) {
+        const first = data[0];
+        track({
+          policyId: BUSINESS_POLICIES.POL_RESERVOIR_LEVELS,
+          eventId: 'RESERVOIR_STATUS_CHECKED',
+          payload: {
+            reservoirId: first.station,
+            district: first.district,
+          },
+        });
+      }
     } catch (err: any) {
       setError(err?.message || 'Failed to load reservoir data');
     } finally {
@@ -89,16 +89,16 @@ export function useReservoir(): UseReservoirReturn {
         );
         setAlerts(districtAlerts);
 
-        // Track event
-        track({
-          eventId: 'OFFLINE_ACCESS_AT_CRITICAL_LEVEL',
-          payload: {
-            action: 'view_district_reservoirs',
-            district,
-            reservoirCount: data.length,
-            serviceId: 10,
-          },
-        });
+        if (data.length > 0) {
+          track({
+            policyId: BUSINESS_POLICIES.POL_RESERVOIR_LEVELS,
+            eventId: 'RESERVOIR_STATUS_CHECKED',
+            payload: {
+              reservoirId: data[0].station,
+              district,
+            },
+          });
+        }
       } catch (err: any) {
         setError(err?.message || 'Failed to load district reservoirs');
       } finally {
@@ -122,15 +122,18 @@ export function useReservoir(): UseReservoirReturn {
       );
       setAlerts(criticalAlerts);
 
-      // Track event
-      track({
-        eventId: 'OFFLINE_ACCESS_AT_CRITICAL_LEVEL',
-        payload: {
-          action: 'view_critical_reservoirs',
-          criticalCount: data.length,
-          serviceId: 10,
-        },
-      });
+      if (data.length > 0) {
+        const firstCritical = data[0];
+        track({
+          policyId: BUSINESS_POLICIES.POL_RESERVOIR_LEVELS,
+          eventId: 'WATER_ALERT_TRIGGERED',
+          payload: {
+            reservoirId: firstCritical.station,
+            currentLevel: firstCritical.currentLevel,
+            threshold: firstCritical.deadStorageLevel,
+          },
+        });
+      }
     } catch (err: any) {
       setError(err?.message || 'Failed to load critical reservoirs');
     } finally {
@@ -147,15 +150,12 @@ export function useReservoir(): UseReservoirReturn {
         const recommendation = await reservoirService.getIrrigationRecommendations(district);
         setIrrigationRecommendation(recommendation);
 
-        // Track event
         track({
-          eventId: 'OFFLINE_ACCESS_AT_CRITICAL_LEVEL',
+          policyId: BUSINESS_POLICIES.POL_RESERVOIR_LEVELS,
+          eventId: 'RESERVOIR_STATUS_CHECKED',
           payload: {
-            action: 'get_irrigation_advice',
+            reservoirId: `${district}_irrigation_advisory`,
             district,
-            availableWater: recommendation.availableWater,
-            criticalityLevel: recommendation.criticalityLevel,
-            serviceId: 10,
           },
         });
       } catch (err: any) {
