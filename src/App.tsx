@@ -295,6 +295,47 @@ function App() {
     });
   }, [serviceSearch, services]);
 
+  const totalSyncActions = syncSnapshot.actions.length;
+  const syncedActions = syncSnapshot.actions.filter((action) => action.status === 'synced').length;
+  const syncHealthPercent =
+    totalSyncActions > 0 ? Math.round((syncedActions / totalSyncActions) * 100) : 100;
+  const draftProgressPercent = Math.round((completedDraftFields / 4) * 100);
+  const draftEngagementLabel = draftAnalytics
+    ? `${draftAnalytics.saveCount} saves · ${draftAnalytics.resumeCount} resumes`
+    : 'No draft activity yet';
+
+  const frontLayerModules: Array<{
+    title: string;
+    subtitle: string;
+    metric: string;
+    view: AppView;
+  }> = [
+    {
+      title: 'Offline Draft Engine',
+      subtitle: 'Atomic save + resume flow',
+      metric: `${draftProgressPercent}% completion`,
+      view: 'draft',
+    },
+    {
+      title: 'Connectivity Transparency',
+      subtitle: 'Queue, sync state, retry visibility',
+      metric: `${outboxCount} pending`,
+      view: 'sync',
+    },
+    {
+      title: 'ROI Intelligence Layer',
+      subtitle: 'Predictive returns + impact cards',
+      metric: `₹${Math.abs(costSavings).toFixed(0)} savings`,
+      view: 'roi',
+    },
+    {
+      title: 'Governance & Admin',
+      subtitle: 'District metrics + trust signals',
+      metric: `${syncHealthPercent}% sync health`,
+      view: 'admin',
+    },
+  ];
+
   return (
     <div className="App">
       <div className="App-shell">
@@ -322,7 +363,8 @@ function App() {
         </section>
         <header className="App-header">
           <div>
-            <h1>Digital Agriculture Platform</h1>
+            <h1>VICT SDK</h1>
+            <p className="brand-tagline">Offline-first intelligence for resilient agriculture services.</p>
             <p className="status-text">{status}</p>
           </div>
           <div className="connectivity-chip">
@@ -384,13 +426,36 @@ function App() {
 
         {activeView === 'overview' && (
           <section className="overview-stack">
+            <section className="command-strip">
+              <article className="command-item">
+                <p>Platform Readiness</p>
+                <strong>{services.length} Services Live</strong>
+              </article>
+              <article className="command-item">
+                <p>Data Reliability</p>
+                <strong>{syncHealthPercent}% Sync Health</strong>
+              </article>
+              <article className="command-item">
+                <p>Farmer Workflow</p>
+                <strong>{draftProgressPercent}% Draft Completion</strong>
+              </article>
+              <article className="command-item">
+                <p>Engagement Signal</p>
+                <strong>{draftEngagementLabel}</strong>
+              </article>
+              <article className="command-item">
+                <p>Impact Signal</p>
+                <strong>{yieldIncreasePercent.toFixed(1)}% Yield Lift</strong>
+              </article>
+            </section>
+
             <div className="hero-grid">
               <div className="hero-copy">
-                <p className="hero-kicker">MRD Vict SDK</p>
-                <h2>Connectivity-transparent, offline-first agriculture services.</h2>
+                <p className="hero-kicker">VICT SDK</p>
+                <h2>Trusted offline-first orchestration for digital agriculture.</h2>
                 <p className="hero-subtitle">
-                  Designed for real-world rural conditions with policy-first telemetry, safe
-                  offline drafts, and measurable impact.
+                  Built for real-world field conditions with transparent sync, secure drafts,
+                  and measurable farmer outcomes.
                 </p>
                 <div className="hero-actions">
                   <button className="primary-btn" onClick={() => setActiveView('draft')}>
@@ -428,6 +493,20 @@ function App() {
                 <p>{syncSnapshot.lastSuccessfulSyncAt ?? 'Not yet synced'}</p>
               </div>
             </div>
+
+            <section className="showcase-grid">
+              {frontLayerModules.map((module) => (
+                <button
+                  key={module.title}
+                  className="showcase-card"
+                  onClick={() => setActiveView(module.view)}
+                >
+                  <span className="showcase-title">{module.title}</span>
+                  <span className="showcase-subtitle">{module.subtitle}</span>
+                  <strong className="showcase-metric">{module.metric}</strong>
+                </button>
+              ))}
+            </section>
 
             <div className="impact-grid">
               {heroDaysSinceOnboarding < 14 && (
