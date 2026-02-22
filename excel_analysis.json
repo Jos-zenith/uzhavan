@@ -1,0 +1,199 @@
+{
+  "file_path": "c:\\Users\\Zenith Joshua\\Desktop\\vict\\my-app\\data\\Farms Stock Report.xlsx",
+  "sheet_names": [
+    "Worksheet"
+  ],
+  "sheets": {
+    "Worksheet": {
+      "dimensions": {
+        "rows": 2486,
+        "columns": 8
+      },
+      "column_names": [
+        "District",
+        "Park / Farm",
+        "Category",
+        "Sub-Category",
+        "Total Stock(in Nos)",
+        "Rate /plant (in Rs.)",
+        "Value (in RS.)",
+        "Last Updated On"
+      ],
+      "data_types": {
+        "District": "object",
+        "Park / Farm": "object",
+        "Category": "object",
+        "Sub-Category": "object",
+        "Total Stock(in Nos)": "int64",
+        "Rate /plant (in Rs.)": "float64",
+        "Value (in RS.)": "int64",
+        "Last Updated On": "object"
+      },
+      "sample_rows": [
+        [
+          "Ariyalur",
+          "Keelapaluvur",
+          "Annual Flower seedlings",
+          "Ixora Dwarf",
+          1506,
+          25.0,
+          37650,
+          "04-09-2025"
+        ],
+        [
+          "Ariyalur",
+          "Keelapaluvur",
+          "Coconut Seedlings",
+          "Tall",
+          140,
+          0.0,
+          0,
+          "11-11-2025"
+        ],
+        [
+          "Ariyalur",
+          "Keelapaluvur",
+          "Tree Seedlings",
+          "Pungam",
+          550,
+          10.0,
+          5500,
+          "12-09-2025"
+        ],
+        [
+          "Ariyalur",
+          "Keelapaluvur",
+          "Bio inputs",
+          "Vermicompost (Kg)",
+          505,
+          12.0,
+          6060,
+          "04-09-2025"
+        ],
+        [
+          "Ariyalur",
+          "Keelapaluvur",
+          "Fruit seedlings",
+          "Mango Softwood Graft",
+          5280,
+          70.0,
+          369600,
+          "11-11-2025"
+        ]
+      ],
+      "patterns": {
+        "District": {
+          "type": "categorical",
+          "unique_count": 41,
+          "sample_values": [
+            "Ariyalur",
+            "Chengalpattu",
+            "Chennai",
+            "Coimbatore",
+            "Cuddalore",
+            "Dharmapuri",
+            "Dindigul",
+            "Erode",
+            "Kallakurichi",
+            "Kancheepuram"
+          ]
+        },
+        "Park / Farm": {
+          "type": "categorical",
+          "unique_count": 107,
+          "sample_values": [
+            "Keelapaluvur",
+            "Attur",
+            "Horticulture Park, Mathavaram",
+            "Madhavaram",
+            "Semmozhi Poonga",
+            "Anaikatty",
+            "Kannampalayam",
+            "Neyveli",
+            "SCN-Neyveli",
+            "Vridhachalam"
+          ]
+        },
+        "Category": {
+          "type": "categorical",
+          "unique_count": 27,
+          "sample_values": [
+            "Annual Flower seedlings",
+            "Coconut Seedlings",
+            "Tree Seedlings",
+            "Bio inputs",
+            "Fruit seedlings",
+            "Flower seedlings",
+            "Plantation crops",
+            "Ornamental Flowering Plants",
+            "TFL Seed production",
+            "Spices and condiments"
+          ]
+        },
+        "Sub-Category": {
+          "type": "categorical",
+          "unique_count": 304,
+          "sample_values": [
+            "Ixora Dwarf",
+            "Tall",
+            "Pungam",
+            "Vermicompost (Kg)",
+            "Mango Softwood Graft",
+            "Nerium",
+            "Jasmine Rooted cuttings",
+            "Rose Plants",
+            "Mango Approach Graft",
+            "Guava Layer"
+          ]
+        },
+        "Total Stock(in Nos)": {
+          "type": "numeric",
+          "min": 1.0,
+          "max": 250000.0,
+          "mean": 4320.872083668544,
+          "non_null_count": 2486
+        },
+        "Rate /plant (in Rs.)": {
+          "type": "numeric",
+          "min": 0.0,
+          "max": 500.0,
+          "mean": 17.90868865647627,
+          "non_null_count": 2486
+        },
+        "Value (in RS.)": {
+          "type": "numeric",
+          "min": 0.0,
+          "max": 8568000.0,
+          "mean": 105150.75744167337,
+          "non_null_count": 2486
+        },
+        "Last Updated On": {
+          "type": "categorical",
+          "unique_count": 60,
+          "sample_values": [
+            "04-09-2025",
+            "11-11-2025",
+            "12-09-2025",
+            "13-08-2025",
+            "28-11-2025",
+            "19-08-2025",
+            "31-07-2025",
+            "08-04-2025",
+            "11-02-2025",
+            "06-05-2024"
+          ]
+        }
+      },
+      "identified_fields": {
+        "location_fields": [
+          "District"
+        ],
+        "crop_fields": [],
+        "stock_fields": [
+          "Total Stock(in Nos)"
+        ],
+        "outlet_fields": []
+      }
+    }
+  }
+}
