@@ -33,13 +33,15 @@ import type {
   TelemetryConfig,
   TelemetryPayload,
   TelemetryTransport,
+  BusinessPolicyId,
 } from './types';
 
 type SdkContextValue = {
   ready: boolean;
   isOnline: boolean;
   queueSize: number;
-  track: (eventId: string, payload: TelemetryPayload, serviceId?: number) => void;
+  /** POLICY-ENFORCED: track(policyId, eventId, payload, serviceId) */
+  track: (policyId: BusinessPolicyId, eventId: string, payload: TelemetryPayload, serviceId?: number) => void;
   flush: () => Promise<void>;
   cachePut: (
     config: OfflineDatasetConfig,
@@ -162,8 +164,8 @@ export function OfflineAgriSdkProvider({
       ready: true,
       isOnline: online,
       queueSize,
-      track: (eventId, payload, serviceId) => {
-        telemetry.track(eventId, payload, serviceId);
+      track: (policyId, eventId, payload, serviceId) => {
+        telemetry.track(policyId, eventId, payload, serviceId);
         setQueueSize(telemetry.queueSize());
       },
       flush: async () => {
@@ -250,7 +252,7 @@ export function OfflineAgriSdkProvider({
           };
         }
 
-        telemetry.track(
+        telemetry.trackFeatureEvent(
           eventId,
           {
             featureId,
@@ -293,7 +295,7 @@ export function OfflineAgriSdkProvider({
 
         const payload = buildKpiMetricPayload(spec, kpi, input.currentValue, input.context);
 
-        telemetry.track(
+        telemetry.trackFeatureEvent(
           'FEATURE_KPI_METRIC',
           {
             ...payload,

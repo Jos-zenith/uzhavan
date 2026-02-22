@@ -1,6 +1,7 @@
 import React from 'react';
 import { weatherService, type WeatherResponse, type FarmingAdvisory } from './weatherService';
 import { useOfflineAgriSdk } from './sdk/provider';
+import { BUSINESS_POLICIES } from './sdk/policy';
 
 export type UseWeatherResult = {
   weather: WeatherResponse | null;
@@ -34,7 +35,8 @@ export function useWeather(initialDistrict?: string): UseWeatherResult {
       // Track weather fetch with SDK telemetry
       if (sdk.ready) {
         sdk.track(
-          'WEATHER_FORECAST_VIEWED',
+          BUSINESS_POLICIES.POL_WEATHER_ADVISORY,
+          'WEATHER_FORECAST_FETCHED',
           {
             district,
             temperature: data.current.temperature,

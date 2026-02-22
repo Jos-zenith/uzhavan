@@ -1,10 +1,12 @@
 import { OfflineEventQueue } from './queue';
+import { PolicyRegistryClient } from './policy';
 import type {
   TelemetryConfig,
   TelemetryEvent,
   TelemetryPayload,
   TelemetryTransport,
 } from './types';
+import type { BusinessPolicyId } from './policy';
 
 const defaultTransport: TelemetryTransport = {
   async sendBatch(events: TelemetryEvent[]) {
@@ -23,6 +25,7 @@ const DEFAULT_CONFIG: Required<TelemetryConfig> = {
 export class TelemetryClient {
   private readonly config: Required<TelemetryConfig>;
   private readonly queue: OfflineEventQueue;
+  private readonly policyRegistry: PolicyRegistryClient;
   private transport: TelemetryTransport;
   private flushTimer: number | null = null;
   private online = true;
@@ -30,6 +33,7 @@ export class TelemetryClient {
   constructor(config?: TelemetryConfig, transport?: TelemetryTransport) {
     this.config = { ...DEFAULT_CONFIG, ...(config ?? {}) };
     this.queue = new OfflineEventQueue(this.config.storageKey, this.config.maxQueueSize);
+    this.policyRegistry = new PolicyRegistryClient();
     this.transport = transport ?? defaultTransport;
 
     if (typeof window !== 'undefined') {
@@ -60,7 +64,33 @@ export class TelemetryClient {
     return this.queue.snapshot().size;
   }
 
-  track(eventId: string, payload: TelemetryPayload, serviceId?: number): TelemetryEvent {
+  /**
+   * Access the policy registry to query or register policies
+   */
+  getPolicyRegistry(): PolicyRegistryClient {
+    return this.policyRegistry;
+  }
+
+  /**
+   * POLICY-ENFORCED: Track an event only if linked to a pre-defined Business Policy
+   * 
+   * @throws Error if policy is not registered or event is not valid for the policy
+   * @throws Error if payload does not conform to event schema
+   */
+  track(
+    policyId: BusinessPolicyId,
+    eventId: string,
+    payload: TelemetryPayload,
+    serviceId?: number
+  ): TelemetryEvent {
+    // Validate that policy exists and event belongs to policy
+    const validation = this.policyRegistry.validateEvent(policyId, eventId, payload ?? {});
+    if (!validation.valid) {
+      throw new Error(
+        `[POLICY ENFORCEMENT] Cannot track event. ${validation.errors.join('; ')}`
+      );
+    }
+
     const event: TelemetryEvent = {
       id: `${Date.now()}_${Math.random().toString(36).slice(2, 10)}`,
       eventId,
@@ -68,6 +98,30 @@ export class TelemetryClient {
       occurredAt: new Date().toISOString(),
       payload,
       retries: 0,
+      policyId, // Link event to its policy
+    };
+
+    this.queue.enqueue(event);
+    return event;
+  }
+
+  /**
+   * Track feature events (for feature release management, not policy-enforced)
+   * Used by the governance & experimentation layer for feature telemetry
+   */
+  trackFeatureEvent(
+    eventId: string,
+    payload: TelemetryPayload,
+    serviceId?: number
+  ): TelemetryEvent {
+    const event: TelemetryEvent = {
+      id: `${Date.now()}_${Math.random().toString(36).slice(2, 10)}`,
+      eventId,
+      serviceId,
+      occurredAt: new Date().toISOString(),
+      payload,
+      retries: 0,
+      // Note: no policyId for feature events
     };
 
     this.queue.enqueue(event);

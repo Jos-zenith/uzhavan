@@ -1,10 +1,14 @@
 export type Primitive = string | number | boolean | null | undefined;
 
+// Re-export BusinessPolicyId for convenience
+export type { BusinessPolicyId } from './policy';
+
 export type TelemetryPayload = Record<string, Primitive>;
 
 export interface TelemetryEvent {
   id: string;
   eventId: string;
+  policyId?: string; // Business Policy ID this event belongs to
   serviceId?: number;
   occurredAt: string;
   payload: TelemetryPayload;

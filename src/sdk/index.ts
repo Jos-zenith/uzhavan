@@ -3,6 +3,7 @@ export * from './storage';
 export * from './queue';
 export * from './telemetry';
 export * from './offline';
+export * from './policy';
 export * from './roi';
 export * from './governance';
 export * from './process';
