@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 const fs = require('fs');
 const path = require('path');
 
@@ -85,35 +83,24 @@ function checkSdkCore() {
   };
 }
 
-function checkSingleDocPolicy() {
-  function walk(dir) {
-    const list = fs.readdirSync(dir, { withFileTypes: true });
-    let files = [];
-    for (const entry of list) {
-      const full = path.join(dir, entry.name);
-      if (entry.isDirectory()) {
-        if (entry.name === 'node_modules' || entry.name === '.git') {
-          continue;
-        }
-        files = files.concat(walk(full));
-      } else {
-        files.push(full);
-      }
-    }
-    return files;
-  }
+function checkDocumentationStructure() {
+  const required = [
+    'README.md',
+    'docs/INDEX.md',
+    'docs/INSTALLATION.md',
+    'SDK_FRAMEWORK.md',
+    'POLICY_ENFORCEMENT_IMPLEMENTATION.md',
+    'POLICY_FIRST_MIGRATION.md',
+  ];
 
-  const mdFiles = walk(appRoot)
-    .filter((file) => file.toLowerCase().endsWith('.md'))
-    .map((file) => path.relative(appRoot, file));
-
-  const ok = mdFiles.length === 1 && mdFiles[0] === 'SDK_FRAMEWORK.md';
+  const missing = required.filter((entry) => !hasPath(entry));
   return {
-    key: 'Documentation Policy',
-    ok,
-    message: ok
-      ? 'Single canonical document policy satisfied.'
-      : `Expected only SDK_FRAMEWORK.md, found: ${mdFiles.join(', ') || 'none'}`,
+    key: 'Documentation Structure',
+    ok: missing.length === 0,
+    message:
+      missing.length === 0
+        ? 'Core documentation files are present.'
+        : `Missing docs: ${missing.join(', ')}`,
   };
 }
 
@@ -129,7 +116,7 @@ function main() {
     checkWorkspaceShape(),
     checkNodeModules(),
     checkSdkCore(),
-    checkSingleDocPolicy(),
+    checkDocumentationStructure(),
   ];
 
   console.log('TN Digital Agriculture SDK - Project Setup Check');
@@ -152,3 +139,4 @@ function main() {
 }
 
 main();
+

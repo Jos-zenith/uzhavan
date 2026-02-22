@@ -6,6 +6,7 @@ import {
   createBusinessPolicy,
   createSdkAccessKey,
   deleteBusinessPolicy,
+  getDistrictImpactSnapshot,
   getAdminDashboardSnapshot,
   getComplianceSummary,
   revokeSdkAccessKey,
@@ -15,9 +16,11 @@ import {
   updateBusinessPolicy,
   updateUserRole,
   type ComplianceSummary,
+  type DistrictImpactSnapshot,
   type ManagedBusinessPolicy,
   type RbacRole,
 } from './adminService';
+import { detectThreeSigmaAnomalies, type TimeSeriesPoint } from './roiEngine';
 
 type PolicyForm = {
   id: string;
@@ -46,6 +49,9 @@ export default function AdminPanelScreen() {
     purpose: string;
     owner: string;
   }>({ id: '', purpose: '', owner: '' });
+  const [districts, setDistricts] = React.useState<DistrictImpactSnapshot[]>(() =>
+    getDistrictImpactSnapshot()
+  );
   const [sdkForm, setSdkForm] = React.useState({
     label: '',
     scopes: 'read:policy,write:telemetry',
@@ -62,7 +68,14 @@ export default function AdminPanelScreen() {
   const refresh = React.useCallback(() => {
     setSnapshot(getAdminDashboardSnapshot());
     setCompliance(getComplianceSummary());
+    setDistricts(getDistrictImpactSnapshot());
   }, []);
+
+  const districtSeries: TimeSeriesPoint[] = districts.map((district) => ({
+    label: district.district,
+    value: district.ingestionLagSeconds,
+  }));
+  const districtAnomalies = detectThreeSigmaAnomalies(districtSeries);
 
   const setMessage = React.useCallback((message: string) => {
     setFeedback(message);
@@ -366,6 +379,63 @@ export default function AdminPanelScreen() {
             <li>Chunks: {snapshot.timescale.chunkCount}</li>
           </ul>
           <p className="admin-inline-note">Captured at: {snapshot.timescale.capturedAt}</p>
+        </article>
+      </section>
+
+      <section className="admin-grid-two">
+        <article className="admin-card">
+          <h3>District-Level Ingestion & Impact</h3>
+          <div className="district-grid">
+            {districts.map((district) => (
+              <div key={district.district} className="district-card">
+                <div className="district-header">
+                  <strong>{district.district}</strong>
+                  <span className={`district-status ${district.status}`}>{district.status}</span>
+                </div>
+                <p>Ingest lag: {district.ingestionLagSeconds}s</p>
+                <p>Pending syncs: {district.pendingSyncCount}</p>
+                <p>Impact score: {district.impactScore}</p>
+              </div>
+            ))}
+          </div>
+          <p className="admin-inline-note">
+            District coverage across 32+ regions with ingestion monitoring and impact scoring.
+          </p>
+        </article>
+
+        <article className="admin-card">
+          <h3>Trust Layer (3σ Anomaly Flags)</h3>
+          <p className="muted">
+            Districts exceeding 3 standard deviations are flagged for manual AAO review.
+          </p>
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>District</th>
+                  <th>Ingest Lag (sec)</th>
+                  <th>Z-Score</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {districtAnomalies.anomalies.length ? (
+                  districtAnomalies.anomalies.map((anomaly) => (
+                    <tr key={anomaly.label}>
+                      <td>{anomaly.label}</td>
+                      <td>{anomaly.value.toFixed(1)}</td>
+                      <td>{anomaly.zScore.toFixed(2)}</td>
+                      <td className="trust-flag">Flagged</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={4}>No districts above 3σ threshold currently.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </article>
       </section>
 

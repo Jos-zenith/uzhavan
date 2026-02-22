@@ -97,6 +97,14 @@ export type AdminAuditLog = {
   loggedAt: string;
 };
 
+export type DistrictImpactSnapshot = {
+  district: string;
+  ingestionLagSeconds: number;
+  pendingSyncCount: number;
+  impactScore: number;
+  status: 'healthy' | 'watch' | 'critical';
+};
+
 type AdminState = {
   policies: ManagedBusinessPolicy[];
   sdkKeys: SdkAccessKey[];
@@ -256,6 +264,54 @@ function loadState(): AdminState {
 
 function saveState(state: AdminState): void {
   writeJson(ADMIN_STORAGE_KEY, state);
+}
+
+export function getDistrictImpactSnapshot(): DistrictImpactSnapshot[] {
+  const state = loadState();
+  const avgPassRate =
+    state.dataQualityRules.reduce((sum, rule) => sum + rule.passRatePercent, 0) /
+    Math.max(1, state.dataQualityRules.length);
+
+  const baseImpact = Math.round(avgPassRate);
+  const basePending = Math.max(1, state.sdkKeys.length);
+
+  return [
+    {
+      district: 'Madurai',
+      ingestionLagSeconds: 12,
+      pendingSyncCount: basePending + 2,
+      impactScore: baseImpact + 5,
+      status: 'healthy',
+    },
+    {
+      district: 'Thanjavur',
+      ingestionLagSeconds: 18,
+      pendingSyncCount: basePending + 3,
+      impactScore: baseImpact + 1,
+      status: 'watch',
+    },
+    {
+      district: 'Erode',
+      ingestionLagSeconds: 9,
+      pendingSyncCount: basePending + 1,
+      impactScore: baseImpact + 8,
+      status: 'healthy',
+    },
+    {
+      district: 'Coimbatore',
+      ingestionLagSeconds: 26,
+      pendingSyncCount: basePending + 5,
+      impactScore: baseImpact - 6,
+      status: 'watch',
+    },
+    {
+      district: 'Tirunelveli',
+      ingestionLagSeconds: 38,
+      pendingSyncCount: basePending + 7,
+      impactScore: baseImpact - 12,
+      status: 'critical',
+    },
+  ];
 }
 
 function appendAudit(state: AdminState, actor: string, action: string, target: string, details: string) {

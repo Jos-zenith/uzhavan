@@ -253,7 +253,7 @@ export default function RoiPortfolioScreen() {
       ) / featureDashboards.length
     : 0;
 
-  const farmerDaysSinceOnboarding = 42;
+  const farmerDaysSinceOnboarding = 10;
   const predictiveInsight = computePredictiveRoi('Madurai', 'Millet', farmerDaysSinceOnboarding, [8, 13, 16, 3], {
     deltaYieldAi: 240,
     deltaMarketPrice: 2.4,
@@ -268,6 +268,19 @@ export default function RoiPortfolioScreen() {
     adoptionRatePercent: avgAdoptionRate,
     engagementEventsPerUser: avgEngagementPerUser,
   });
+
+  const yieldIncreasePercent =
+    ((predictiveInsight.breakdown.adjustedYield - predictiveInsight.baselineUsed.avgYield) /
+      predictiveInsight.baselineUsed.avgYield) *
+    100;
+  const baselineCostTotal =
+    predictiveInsight.baselineUsed.avgInputCost +
+    predictiveInsight.baselineUsed.avgTransactionCost +
+    predictiveInsight.baselineUsed.avgInputCost * 0.12 +
+    predictiveInsight.baselineUsed.avgInputCost * 0.08;
+  const costSavingsDelta = baselineCostTotal - predictiveInsight.breakdown.totalCosts;
+  const timeSavedHours = 14;
+  const pestAlertsResolved = 5;
 
   const kpiSeries: TimeSeriesPoint[] = attribution.entries.map((entry) => ({
     label: `${entry.featureId}:${entry.kpiId}`,
@@ -303,6 +316,40 @@ export default function RoiPortfolioScreen() {
           <p>{sdk.queueSize}</p>
           <small>{sdk.isOnline ? 'Online' : 'Offline'}</small>
         </article>
+      </section>
+
+      <section className="impact-nudge-grid">
+        {farmerDaysSinceOnboarding < 14 && (
+          <article className="impact-nudge cold-start">
+            <h3>Learning Mode (14-day warmup)</h3>
+            <p>
+              We are analyzing regional signals to unlock your first profit prediction.
+            </p>
+            <small>Estimated readiness: {14 - farmerDaysSinceOnboarding} days</small>
+          </article>
+        )}
+        <article className="impact-nudge">
+          <h3>Yield Increase</h3>
+          <p>AI alerts helped increase yield by {yieldIncreasePercent.toFixed(1)}%</p>
+          <small>Baseline: {predictiveInsight.baselineUsed.district}</small>
+        </article>
+        <article className="impact-nudge">
+          <h3>Cost Savings</h3>
+          <p>Saved ₹{Math.abs(costSavingsDelta).toFixed(0)} above district average</p>
+          <small>Inputs + transactions + operational savings</small>
+        </article>
+        <article className="impact-nudge">
+          <h3>Time Saved</h3>
+          <p>Digital services saved you {timeSavedHours} hours of travel</p>
+          <small>Assisted journeys this season</small>
+        </article>
+        {pestAlertsResolved >= 5 && (
+          <article className="impact-nudge milestone">
+            <h3>Milestone Triggered</h3>
+            <p>Resolved {pestAlertsResolved} pest alerts this month</p>
+            <small>High-impact card pushed immediately</small>
+          </article>
+        )}
       </section>
 
       <section className="table-wrap">

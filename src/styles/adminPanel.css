@@ -5,9 +5,9 @@
 }
 
 .admin-header {
-  border: 1px solid #d9e7fb;
+  border: 1px solid rgba(120, 168, 240, 0.35);
   border-radius: 12px;
-  background: #fff;
+  background: rgba(10, 18, 34, 0.9);
   padding: 12px;
 }
 
@@ -17,15 +17,15 @@
 
 .admin-header p {
   margin: 6px 0 0;
-  color: #4b6786;
+  color: #8ba6c7;
 }
 
 .admin-feedback {
   margin-top: 8px;
-  border: 1px solid #cfe0fb;
+  border: 1px solid rgba(120, 168, 240, 0.35);
   border-radius: 8px;
-  background: #f7fbff;
-  color: #1f4a79;
+  background: rgba(15, 26, 44, 0.9);
+  color: #cfe6ff;
   padding: 8px 10px;
 }
 
@@ -36,14 +36,15 @@
 }
 
 .admin-card {
-  border: 1px solid #d9e7fb;
+  border: 1px solid rgba(120, 168, 240, 0.35);
   border-radius: 12px;
-  background: #fff;
+  background: rgba(10, 18, 34, 0.9);
   padding: 12px;
 }
 
 .admin-card h3 {
   margin: 0 0 10px;
+  color: #bfe2ff;
 }
 
 .admin-form-grid {
@@ -85,15 +86,15 @@
 
 .admin-table th,
 .admin-table td {
-  border: 1px solid #e4eefc;
+  border: 1px solid rgba(120, 168, 240, 0.25);
   padding: 8px;
   text-align: left;
   vertical-align: top;
 }
 
 .admin-table th {
-  background: #f7fbff;
-  color: #355578;
+  background: rgba(13, 23, 41, 0.8);
+  color: #b1d2ff;
 }
 
 .admin-list {
@@ -141,8 +142,62 @@
 }
 
 .muted {
-  color: #4b6786;
+  color: #8ba6c7;
   font-size: 0.9rem;
+}
+
+.district-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.district-card {
+  border: 1px solid rgba(120, 168, 240, 0.25);
+  border-radius: 12px;
+  padding: 10px;
+  background: rgba(8, 14, 24, 0.85);
+}
+
+.district-card p {
+  margin: 6px 0 0;
+  color: #b2c9e6;
+}
+
+.district-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.district-status {
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(120, 168, 240, 0.25);
+  color: #d4e8ff;
+}
+
+.district-status.healthy {
+  background: rgba(83, 240, 161, 0.3);
+  color: #b5f7d2;
+}
+
+.district-status.watch {
+  background: rgba(255, 190, 117, 0.3);
+  color: #ffd6a0;
+}
+
+.district-status.critical {
+  background: rgba(255, 120, 120, 0.3);
+  color: #ffc9c9;
+}
+
+.trust-flag {
+  color: #ffb2b2;
+  font-weight: 700;
 }
 
 @media (max-width: 960px) {
