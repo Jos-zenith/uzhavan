@@ -1,5 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 import {
+  markSyncFailed,
   markSynced,
   markSyncing,
   queueLocalChange,
@@ -39,15 +40,81 @@ export type ResumePrompt = {
   hasDraft: boolean;
   draftKey: string;
   updatedAt?: string;
+  isAbandoned?: boolean;
+  minutesSinceLastSave?: number;
 };
 
 export type SyncQueueStatus = 'queued' | 'syncing' | 'synced' | 'failed';
+
+export type SyncActionStatusLabel =
+  | 'Queued Locally'
+  | 'Syncing'
+  | 'Synced'
+  | 'Failed';
+
+export type SyncActionStatus = {
+  id: number;
+  serviceId: number;
+  draftKey: string | null;
+  operationType: string;
+  status: SyncQueueStatus;
+  statusLabel: SyncActionStatusLabel;
+  queuedAt: string;
+  nextAttemptAt: string;
+  processedAt: string | null;
+  retryCount: number;
+  errorMessage: string | null;
+};
+
+export type SyncStatusSnapshot = {
+  connectivity: ConnectivityState;
+  queueCounts: {
+    queued: number;
+    syncing: number;
+    synced: number;
+    failed: number;
+  };
+  lastSuccessfulSyncAt: string | null;
+  actions: SyncActionStatus[];
+};
 
 export type SubsidyApplicationInput = {
   farmerId: string;
   schemeId: string;
   year: number;
   payload: Record<string, string>;
+};
+
+export type SubsidyUpsertResult = {
+  policyHash: string;
+  isDuplicate: boolean;
+  duplicateOfUpdatedAt?: string;
+};
+
+export type DraftAbandonmentAnalytics = {
+  serviceId: number;
+  draftKey: string;
+  firstSavedAt: string;
+  lastSavedAt: string;
+  saveCount: number;
+  resumeCount: number;
+  isAbandoned: boolean;
+  abandonedAt: string | null;
+  lastResumeAt: string | null;
+};
+
+export type LandParcelMutationType = 'claim' | 'release' | 'update';
+
+export type LandParcelConflict = {
+  id: number;
+  parcelId: string;
+  existingFarmerId: string;
+  incomingFarmerId: string;
+  operationType: string;
+  eventStoreId: number;
+  detectedAt: string;
+  resolvedAt: string | null;
+  resolutionNote: string | null;
 };
 
 export type RosterSyncResult = {
@@ -414,6 +481,7 @@ const SERVICE_SYNC_PRIORITY: Record<number, number> = {
 const DEFAULT_SYNC_PRIORITY = 50;
 const MAX_RETRY_ATTEMPTS = 5;
 const BASE_RETRY_DELAY_MS = 30_000;
+const DEFAULT_DRAFT_ABANDONMENT_MINUTES = 30;
 
 let databasePromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
@@ -504,6 +572,40 @@ async function createSchema(db: SQLite.SQLiteDatabase): Promise<void> {
       encrypted_payload TEXT NOT NULL,
       updated_at TEXT NOT NULL,
       sync_state TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS draft_analytics (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      service_id INTEGER NOT NULL,
+      draft_key TEXT NOT NULL,
+      first_saved_at TEXT NOT NULL,
+      last_saved_at TEXT NOT NULL,
+      save_count INTEGER NOT NULL DEFAULT 0,
+      resume_count INTEGER NOT NULL DEFAULT 0,
+      is_abandoned INTEGER NOT NULL DEFAULT 0,
+      abandoned_at TEXT,
+      last_resume_at TEXT,
+      UNIQUE(service_id, draft_key)
+    );
+
+    CREATE TABLE IF NOT EXISTS land_parcel_state (
+      parcel_id TEXT PRIMARY KEY NOT NULL,
+      farmer_id TEXT NOT NULL,
+      service_id INTEGER NOT NULL,
+      updated_at TEXT NOT NULL,
+      source_event_id INTEGER
+    );
+
+    CREATE TABLE IF NOT EXISTS land_parcel_conflicts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      parcel_id TEXT NOT NULL,
+      existing_farmer_id TEXT NOT NULL,
+      incoming_farmer_id TEXT NOT NULL,
+      operation_type TEXT NOT NULL,
+      event_store_id INTEGER NOT NULL,
+      detected_at TEXT NOT NULL,
+      resolved_at TEXT,
+      resolution_note TEXT
     );
 
     CREATE TABLE IF NOT EXISTS subsidy_rules_cache (
@@ -821,6 +923,158 @@ async function recordSequentialEvent(
   );
 }
 
+async function refreshDraftAbandonmentState(
+  serviceId?: number,
+  draftKey?: string,
+  thresholdMinutes: number = DEFAULT_DRAFT_ABANDONMENT_MINUTES
+): Promise<void> {
+  const db = await getDatabase();
+  const now = new Date().toISOString();
+
+  const scopedByService = typeof serviceId === 'number';
+  const scopedByDraftKey = typeof draftKey === 'string' && draftKey.length > 0;
+
+  const scopeSql = [
+    scopedByService ? 'AND da.service_id = ?' : '',
+    scopedByDraftKey ? 'AND da.draft_key = ?' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  const params: Array<number | string> = [now, now, thresholdMinutes];
+  if (scopedByService) {
+    params.push(serviceId!);
+  }
+  if (scopedByDraftKey) {
+    params.push(draftKey!);
+  }
+
+  await db.runAsync(
+    `UPDATE draft_analytics AS da
+     SET
+       is_abandoned = 1,
+       abandoned_at = COALESCE(da.abandoned_at, ?)
+     WHERE da.is_abandoned = 0
+       AND EXISTS (
+         SELECT 1
+         FROM service_drafts sd
+         WHERE sd.service_id = da.service_id
+           AND sd.draft_key = da.draft_key
+       )
+       AND ((julianday(?) - julianday(da.last_saved_at)) * 24 * 60) >= ?
+       ${scopeSql};`,
+    params
+  );
+}
+
+async function replayLandParcelEvent(
+  event: {
+    id: number;
+    service_id: number;
+    operation_type: string;
+    payload: string;
+  }
+): Promise<{ status: 'synced' | 'conflict'; reason?: string }> {
+  const db = await getDatabase();
+  const parsed = JSON.parse(event.payload) as {
+    parcelId?: string;
+    farmerId?: string;
+    operation?: LandParcelMutationType;
+  };
+
+  const parcelId = parsed.parcelId?.trim();
+  const incomingFarmerId = parsed.farmerId?.trim();
+  const action = parsed.operation;
+
+  if (!parcelId || !incomingFarmerId || !action) {
+    return { status: 'conflict', reason: 'Invalid land parcel payload' };
+  }
+
+  const currentState = await db.getFirstAsync<{ farmer_id: string }>(
+    `SELECT farmer_id
+     FROM land_parcel_state
+     WHERE parcel_id = ?;`,
+    [parcelId]
+  );
+
+  const now = new Date().toISOString();
+
+  if (action === 'claim' || action === 'update') {
+    if (currentState && currentState.farmer_id !== incomingFarmerId) {
+      await db.runAsync(
+        `INSERT INTO land_parcel_conflicts (
+          parcel_id,
+          existing_farmer_id,
+          incoming_farmer_id,
+          operation_type,
+          event_store_id,
+          detected_at
+        ) VALUES (?, ?, ?, ?, ?, ?);`,
+        [
+          parcelId,
+          currentState.farmer_id,
+          incomingFarmerId,
+          event.operation_type,
+          event.id,
+          now,
+        ]
+      );
+
+      return { status: 'conflict', reason: 'Parcel already claimed by different farmer' };
+    }
+
+    await db.runAsync(
+      `INSERT INTO land_parcel_state (
+        parcel_id,
+        farmer_id,
+        service_id,
+        updated_at,
+        source_event_id
+      ) VALUES (?, ?, ?, ?, ?)
+      ON CONFLICT(parcel_id)
+      DO UPDATE SET
+        farmer_id = excluded.farmer_id,
+        service_id = excluded.service_id,
+        updated_at = excluded.updated_at,
+        source_event_id = excluded.source_event_id;`,
+      [parcelId, incomingFarmerId, event.service_id, now, event.id]
+    );
+
+    return { status: 'synced' };
+  }
+
+  if (!currentState || currentState.farmer_id !== incomingFarmerId) {
+    await db.runAsync(
+      `INSERT INTO land_parcel_conflicts (
+        parcel_id,
+        existing_farmer_id,
+        incoming_farmer_id,
+        operation_type,
+        event_store_id,
+        detected_at
+      ) VALUES (?, ?, ?, ?, ?, ?);`,
+      [
+        parcelId,
+        currentState?.farmer_id ?? 'NONE',
+        incomingFarmerId,
+        event.operation_type,
+        event.id,
+        now,
+      ]
+    );
+
+    return { status: 'conflict', reason: 'Release requested by non-owner' };
+  }
+
+  await db.runAsync(
+    `DELETE FROM land_parcel_state
+     WHERE parcel_id = ?;`,
+    [parcelId]
+  );
+
+  return { status: 'synced' };
+}
+
 async function executeRemoteSync(payload: string): Promise<void> {
   const parsed = JSON.parse(payload) as { forceFailure?: boolean };
   if (parsed.forceFailure) {
@@ -877,6 +1131,27 @@ export async function saveDraftFieldAtomic(
     [serviceId, draftKey]
   );
 
+  await db.runAsync(
+    `INSERT INTO draft_analytics (
+      service_id,
+      draft_key,
+      first_saved_at,
+      last_saved_at,
+      save_count,
+      resume_count,
+      is_abandoned,
+      abandoned_at,
+      last_resume_at
+    ) VALUES (?, ?, ?, ?, 1, 0, 0, NULL, NULL)
+    ON CONFLICT(service_id, draft_key)
+    DO UPDATE SET
+      last_saved_at = excluded.last_saved_at,
+      save_count = draft_analytics.save_count + 1,
+      is_abandoned = 0,
+      abandoned_at = NULL;`,
+    [serviceId, draftKey, updatedAt, updatedAt]
+  );
+
   await enqueuePolicySyncOperation(
     serviceId,
     draftKey,
@@ -908,7 +1183,7 @@ export async function generatePolicyHash(
 
 export async function upsertSubsidyApplicationOffline(
   input: SubsidyApplicationInput
-): Promise<{ policyHash: string }> {
+): Promise<SubsidyUpsertResult> {
   const db = await getDatabase();
   const secret = getOrCreateEncryptionSecret();
   const now = new Date().toISOString();
@@ -919,6 +1194,43 @@ export async function upsertSubsidyApplicationOffline(
   );
   const encryptedPayload = await encryptJson(input.payload, secret);
 
+  const existing = await db.getFirstAsync<{ updated_at: string }>(
+    `SELECT updated_at
+     FROM subsidy_applications
+     WHERE policy_hash = ?;`,
+    [policyHash]
+  );
+
+  if (existing) {
+    const duplicatePayload = JSON.stringify({
+      policyHash,
+      farmerId: input.farmerId,
+      schemeId: input.schemeId,
+      year: input.year,
+      duplicateOfUpdatedAt: existing.updated_at,
+    });
+
+    await enqueuePolicySyncOperation(
+      1,
+      policyHash,
+      'subsidy_duplicate_detected',
+      duplicatePayload
+    );
+    await recordSequentialEvent(
+      1,
+      policyHash,
+      'subsidy_duplicate_detected',
+      duplicatePayload
+    );
+
+    queueLocalChange();
+    return {
+      policyHash,
+      isDuplicate: true,
+      duplicateOfUpdatedAt: existing.updated_at,
+    };
+  }
+
   await db.runAsync(
     `INSERT INTO subsidy_applications (
       policy_hash,
@@ -928,15 +1240,7 @@ export async function upsertSubsidyApplicationOffline(
       encrypted_payload,
       updated_at,
       sync_state
-    ) VALUES (?, ?, ?, ?, ?, ?, 'queued')
-    ON CONFLICT(policy_hash)
-    DO UPDATE SET
-      farmer_id = excluded.farmer_id,
-      scheme_id = excluded.scheme_id,
-      year = excluded.year,
-      encrypted_payload = excluded.encrypted_payload,
-      updated_at = excluded.updated_at,
-      sync_state = 'queued';`,
+    ) VALUES (?, ?, ?, ?, ?, ?, 'queued');`,
     [
       policyHash,
       input.farmerId,
@@ -961,7 +1265,10 @@ export async function upsertSubsidyApplicationOffline(
   );
 
   queueLocalChange();
-  return { policyHash };
+  return {
+    policyHash,
+    isDuplicate: false,
+  };
 }
 
 export async function getDraftResumePrompt(
@@ -970,8 +1277,23 @@ export async function getDraftResumePrompt(
 ): Promise<ResumePrompt> {
   const db = await getDatabase();
 
-  const row = await db.getFirstAsync<{ updated_at: string }>(
-    'SELECT updated_at FROM service_drafts WHERE service_id = ? AND draft_key = ?;',
+  await refreshDraftAbandonmentState(serviceId, draftKey);
+
+  const row = await db.getFirstAsync<{
+    updated_at: string;
+    is_abandoned: number;
+    last_saved_at: string;
+  }>(
+    `SELECT
+      sd.updated_at,
+      COALESCE(da.is_abandoned, 0) as is_abandoned,
+      COALESCE(da.last_saved_at, sd.updated_at) as last_saved_at
+    FROM service_drafts sd
+    LEFT JOIN draft_analytics da
+      ON da.service_id = sd.service_id
+      AND da.draft_key = sd.draft_key
+    WHERE sd.service_id = ?
+      AND sd.draft_key = ?;`,
     [serviceId, draftKey]
   );
 
@@ -986,6 +1308,13 @@ export async function getDraftResumePrompt(
     hasDraft: true,
     draftKey,
     updatedAt: row.updated_at,
+    isAbandoned: row.is_abandoned === 1,
+    minutesSinceLastSave: Math.max(
+      0,
+      Math.floor(
+        (Date.now() - new Date(row.last_saved_at).getTime()) / (1000 * 60)
+      )
+    ),
   };
 }
 
@@ -1005,6 +1334,38 @@ export async function loadDraftPayload(
     return null;
   }
 
+  await refreshDraftAbandonmentState(serviceId, draftKey);
+
+  const analytics = await db.getFirstAsync<{ is_abandoned: number }>(
+    `SELECT is_abandoned
+     FROM draft_analytics
+     WHERE service_id = ?
+       AND draft_key = ?;`,
+    [serviceId, draftKey]
+  );
+
+  if (analytics?.is_abandoned === 1) {
+    const now = new Date().toISOString();
+    await db.runAsync(
+      `UPDATE draft_analytics
+       SET
+         is_abandoned = 0,
+         abandoned_at = NULL,
+         resume_count = resume_count + 1,
+         last_resume_at = ?
+       WHERE service_id = ?
+         AND draft_key = ?;`,
+      [now, serviceId, draftKey]
+    );
+
+    await recordSequentialEvent(
+      serviceId,
+      draftKey,
+      'draft_resumed_after_abandonment',
+      JSON.stringify({ serviceId, draftKey, resumedAt: now })
+    );
+  }
+
   return decryptJson<Record<string, string>>(row.encrypted_payload, secret);
 }
 
@@ -1018,9 +1379,134 @@ export async function clearDraft(
     'DELETE FROM service_drafts WHERE service_id = ? AND draft_key = ?;',
     [serviceId, draftKey]
   );
+
+  await db.runAsync(
+    'DELETE FROM draft_analytics WHERE service_id = ? AND draft_key = ?;',
+    [serviceId, draftKey]
+  );
 }
 
-export async function processSyncQueue(): Promise<ConnectivityState> {
+export async function getDraftAbandonmentAnalytics(
+  serviceId: number,
+  draftKey: string
+): Promise<DraftAbandonmentAnalytics | null> {
+  const db = await getDatabase();
+  await refreshDraftAbandonmentState(serviceId, draftKey);
+
+  const row = await db.getFirstAsync<{
+    service_id: number;
+    draft_key: string;
+    first_saved_at: string;
+    last_saved_at: string;
+    save_count: number;
+    resume_count: number;
+    is_abandoned: number;
+    abandoned_at: string | null;
+    last_resume_at: string | null;
+  }>(
+    `SELECT
+      service_id,
+      draft_key,
+      first_saved_at,
+      last_saved_at,
+      save_count,
+      resume_count,
+      is_abandoned,
+      abandoned_at,
+      last_resume_at
+    FROM draft_analytics
+    WHERE service_id = ?
+      AND draft_key = ?;`,
+    [serviceId, draftKey]
+  );
+
+  if (!row) {
+    return null;
+  }
+
+  return {
+    serviceId: row.service_id,
+    draftKey: row.draft_key,
+    firstSavedAt: row.first_saved_at,
+    lastSavedAt: row.last_saved_at,
+    saveCount: row.save_count,
+    resumeCount: row.resume_count,
+    isAbandoned: row.is_abandoned === 1,
+    abandonedAt: row.abandoned_at,
+    lastResumeAt: row.last_resume_at,
+  };
+}
+
+export async function recordLandParcelMutation(
+  serviceId: number,
+  parcelId: string,
+  farmerId: string,
+  operation: LandParcelMutationType,
+  context: Record<string, string> = {}
+): Promise<void> {
+  const payload = JSON.stringify({
+    parcelId,
+    farmerId,
+    operation,
+    context,
+    recordedAt: new Date().toISOString(),
+  });
+
+  await recordSequentialEvent(
+    serviceId,
+    `land_parcel:${parcelId}`,
+    `land_parcel_${operation}`,
+    payload
+  );
+
+  queueLocalChange();
+
+  if (getConnectivityState().isOnline) {
+    await processSyncQueue();
+  }
+}
+
+export async function listLandParcelConflicts(
+  parcelId?: string
+): Promise<LandParcelConflict[]> {
+  const db = await getDatabase();
+
+  if (parcelId) {
+    return db.getAllAsync<LandParcelConflict>(
+      `SELECT
+        id,
+        parcel_id as parcelId,
+        existing_farmer_id as existingFarmerId,
+        incoming_farmer_id as incomingFarmerId,
+        operation_type as operationType,
+        event_store_id as eventStoreId,
+        detected_at as detectedAt,
+        resolved_at as resolvedAt,
+        resolution_note as resolutionNote
+      FROM land_parcel_conflicts
+      WHERE parcel_id = ?
+      ORDER BY detected_at DESC;`,
+      [parcelId]
+    );
+  }
+
+  return db.getAllAsync<LandParcelConflict>(
+    `SELECT
+      id,
+      parcel_id as parcelId,
+      existing_farmer_id as existingFarmerId,
+      incoming_farmer_id as incomingFarmerId,
+      operation_type as operationType,
+      event_store_id as eventStoreId,
+      detected_at as detectedAt,
+      resolved_at as resolvedAt,
+      resolution_note as resolutionNote
+    FROM land_parcel_conflicts
+    ORDER BY detected_at DESC;`
+  );
+}
+
+export async function processSyncQueue(forceProcessAll: boolean = false): Promise<ConnectivityState> {
   const db = await getDatabase();
   const connection = getConnectivityState();
 
@@ -1043,10 +1529,10 @@ export async function processSyncQueue(): Promise<ConnectivityState> {
     `SELECT id, service_id, draft_key, payload, retry_count
      FROM sync_queue_policy
      WHERE status IN ('queued', 'failed')
-       AND next_attempt_at <= ?
+       AND (? = 1 OR next_attempt_at <= ?)
      ORDER BY priority DESC, queued_at ASC
      LIMIT 200;`,
-    [now]
+    [forceProcessAll ? 1 : 0, now]
   );
 
   for (const item of queuedItems) {
@@ -1101,17 +1587,126 @@ export async function processSyncQueue(): Promise<ConnectivityState> {
     }
   }
 
-  const pendingRow = await db.getFirstAsync<{ count: number }>(
-    `SELECT COUNT(*) as count
-     FROM sync_queue_policy
-     WHERE status IN ('queued', 'syncing', 'failed');`
+  const pendingCounts = await db.getFirstAsync<{
+    queuedCount: number;
+    syncingCount: number;
+    failedCount: number;
+  }>(
+    `SELECT
+      SUM(CASE WHEN status = 'queued' THEN 1 ELSE 0 END) AS queuedCount,
+      SUM(CASE WHEN status = 'syncing' THEN 1 ELSE 0 END) AS syncingCount,
+      SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) AS failedCount
+     FROM sync_queue_policy;`
   );
 
-  if ((pendingRow?.count ?? 0) === 0) {
+  const queuedCount = pendingCounts?.queuedCount ?? 0;
+  const syncingCount = pendingCounts?.syncingCount ?? 0;
+  const failedCount = pendingCounts?.failedCount ?? 0;
+
+  if (queuedCount + syncingCount + failedCount === 0) {
     markSynced();
+  } else if (failedCount > 0) {
+    markSyncFailed();
+  } else {
+    markSyncing();
   }
 
   return getConnectivityState();
+}
+
+function toSyncStatusLabel(status: SyncQueueStatus): SyncActionStatusLabel {
+  if (status === 'queued') {
+    return 'Queued Locally';
+  }
+  if (status === 'syncing') {
+    return 'Syncing';
+  }
+  if (status === 'synced') {
+    return 'Synced';
+  }
+  return 'Failed';
+}
+
+export async function getSyncStatusSnapshot(limit: number = 100): Promise<SyncStatusSnapshot> {
+  const db = await getDatabase();
+
+  const rows = await db.getAllAsync<{
+    id: number;
+    service_id: number;
+    draft_key: string | null;
+    operation_type: string;
+    status: SyncQueueStatus;
+    queued_at: string;
+    next_attempt_at: string;
+    processed_at: string | null;
+    retry_count: number;
+    error_message: string | null;
+  }>(
+    `SELECT
+      id,
+      service_id,
+      draft_key,
+      operation_type,
+      status,
+      queued_at,
+      next_attempt_at,
+      processed_at,
+      retry_count,
+      error_message
+    FROM sync_queue_policy
+    ORDER BY queued_at DESC
+    LIMIT ?;`,
+    [Math.max(1, limit)]
+  );
+
+  const counts = await db.getFirstAsync<{
+    queuedCount: number;
+    syncingCount: number;
+    syncedCount: number;
+    failedCount: number;
+  }>(
+    `SELECT
+      SUM(CASE WHEN status = 'queued' THEN 1 ELSE 0 END) AS queuedCount,
+      SUM(CASE WHEN status = 'syncing' THEN 1 ELSE 0 END) AS syncingCount,
+      SUM(CASE WHEN status = 'synced' THEN 1 ELSE 0 END) AS syncedCount,
+      SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) AS failedCount
+     FROM sync_queue_policy;`
+  );
+
+  const lastSuccess = await db.getFirstAsync<{ last_processed_at: string | null }>(
+    `SELECT MAX(processed_at) AS last_processed_at
+     FROM sync_queue_policy
+     WHERE status = 'synced';`
+  );
+
+  return {
+    connectivity: getConnectivityState(),
+    queueCounts: {
+      queued: counts?.queuedCount ?? 0,
+      syncing: counts?.syncingCount ?? 0,
+      synced: counts?.syncedCount ?? 0,
+      failed: counts?.failedCount ?? 0,
+    },
+    lastSuccessfulSyncAt: lastSuccess?.last_processed_at ?? null,
+    actions: rows.map((row) => ({
+      id: row.id,
+      serviceId: row.service_id,
+      draftKey: row.draft_key,
+      operationType: row.operation_type,
+      status: row.status,
+      statusLabel: toSyncStatusLabel(row.status),
+      queuedAt: row.queued_at,
+      nextAttemptAt: row.next_attempt_at,
+      processedAt: row.processed_at,
+      retryCount: row.retry_count,
+      errorMessage: row.error_message,
+    })),
+  };
+}
+
+export async function triggerManualSync(): Promise<SyncStatusSnapshot> {
+  await processSyncQueue(true);
+  return getSyncStatusSnapshot();
 }
 
 export async function replayEventStoreChronologically(): Promise<RosterSyncResult> {
@@ -1134,6 +1729,31 @@ export async function replayEventStoreChronologically(): Promise<RosterSyncResul
   let failed = 0;
   for (const event of events) {
     try {
+      if (event.operation_type.startsWith('land_parcel_')) {
+        const landReplay = await replayLandParcelEvent(event);
+
+        await db.runAsync(
+          `UPDATE local_event_store
+           SET replay_status = ?
+           WHERE id = ?;`,
+          [landReplay.status, event.id]
+        );
+
+        if (landReplay.status === 'synced') {
+          await enqueuePolicySyncOperation(
+            event.service_id,
+            event.entity_key,
+            `event_replay:${event.operation_type}`,
+            event.payload
+          );
+          processed += 1;
+        } else {
+          failed += 1;
+        }
+
+        continue;
+      }
+
       await enqueuePolicySyncOperation(
         event.service_id,
         event.entity_key,

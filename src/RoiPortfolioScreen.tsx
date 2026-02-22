@@ -4,6 +4,12 @@ import {
   type FeatureOutcomeSpec,
   useOfflineAgriSdk,
 } from './sdk';
+import {
+  buildAdoptionStageInsightMatrix,
+  computePredictiveRoi,
+  detectThreeSigmaAnomalies,
+  type TimeSeriesPoint,
+} from './roiEngine';
 import './styles/roiPortfolio.css';
 
 function createDefaultSpecs(): FeatureOutcomeSpec[] {
@@ -233,6 +239,42 @@ export default function RoiPortfolioScreen() {
     }))
   );
 
+  const avgAdoptionRate = featureDashboards.length
+    ? featureDashboards.reduce(
+        (sum, dashboard) => sum + dashboard.leadingIndicators.adoptionRatePercent,
+        0
+      ) / featureDashboards.length
+    : 0;
+
+  const avgEngagementPerUser = featureDashboards.length
+    ? featureDashboards.reduce(
+        (sum, dashboard) => sum + dashboard.leadingIndicators.engagementEventsPerUser,
+        0
+      ) / featureDashboards.length
+    : 0;
+
+  const farmerDaysSinceOnboarding = 42;
+  const predictiveInsight = computePredictiveRoi('Madurai', 'Millet', farmerDaysSinceOnboarding, [8, 13, 16, 3], {
+    deltaYieldAi: 240,
+    deltaMarketPrice: 2.4,
+    deltaInputCostSavings: 3200,
+    deltaTransactionCostSavings: 550,
+    deltaOperationalCostSavings: 760,
+    deltaRiskCostSavings: 640,
+  });
+
+  const matrixRows = buildAdoptionStageInsightMatrix({
+    farmerDaysSinceOnboarding,
+    adoptionRatePercent: avgAdoptionRate,
+    engagementEventsPerUser: avgEngagementPerUser,
+  });
+
+  const kpiSeries: TimeSeriesPoint[] = attribution.entries.map((entry) => ({
+    label: `${entry.featureId}:${entry.kpiId}`,
+    value: entry.attributedImpactScore,
+  }));
+  const anomalyReport = detectThreeSigmaAnomalies(kpiSeries);
+
   return (
     <div className="roi-screen">
       <h1>ROI Portfolio Dashboard</h1>
@@ -261,6 +303,107 @@ export default function RoiPortfolioScreen() {
           <p>{sdk.queueSize}</p>
           <small>{sdk.isOnline ? 'Online' : 'Offline'}</small>
         </article>
+      </section>
+
+      <section className="table-wrap">
+        <h2>Personalized Impact Insights</h2>
+        <div className="insight-grid">
+          <article className="insight-card">
+            <h3>ROI Formula (Implemented)</h3>
+            <p className="formula-line">{predictiveInsight.formulaUsed}</p>
+            <small>
+              P_net: ₹{predictiveInsight.netProfit.toFixed(2)} · Stage: {predictiveInsight.adoptionStage}
+            </small>
+          </article>
+          <article className="insight-card">
+            <h3>Synthetic Baseline (District Proxy)</h3>
+            <p>
+              {predictiveInsight.baselineUsed.district} · {predictiveInsight.baselineUsed.crop}
+            </p>
+            <small>
+              Yield {predictiveInsight.baselineUsed.avgYield.toFixed(0)} | Price ₹
+              {predictiveInsight.baselineUsed.avgMarketPrice.toFixed(2)} | Input ₹
+              {predictiveInsight.baselineUsed.avgInputCost.toFixed(2)}
+            </small>
+          </article>
+          <article className="insight-card">
+            <h3>3 Sigma Anomaly Detection</h3>
+            <p>{anomalyReport.anomalies.length} flagged KPI signals</p>
+            <small>
+              μ {anomalyReport.mean.toFixed(2)} · σ {anomalyReport.standardDeviation.toFixed(2)} ·
+              threshold {anomalyReport.threshold.toFixed(2)}
+            </small>
+          </article>
+        </div>
+      </section>
+
+      <section className="table-wrap">
+        <h2>Learning Mode (Cold Start Cards)</h2>
+        <div className="insight-grid">
+          {predictiveInsight.learningModeCards.map((card) => (
+            <article key={card.id} className="insight-card">
+              <h3>{card.title}</h3>
+              <p>{card.body}</p>
+              <small>Priority: {card.priority}</small>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="table-wrap">
+        <h2>Adoption Stage Insight Matrix</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Stage</th>
+              <th>Entry Criteria</th>
+              <th>Expected Signal</th>
+              <th>Recommended Action</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {matrixRows.map((row) => (
+              <tr key={row.stage}>
+                <td>{row.stage}</td>
+                <td>{row.entryCriteria}</td>
+                <td>{row.expectedSignal}</td>
+                <td>{row.recommendedAction}</td>
+                <td className={row.active ? 'matrix-active' : 'matrix-inactive'}>
+                  {row.active ? 'Active' : 'Planned'}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+
+      <section className="table-wrap">
+        <h2>Anomaly Flags (3 Sigma)</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Signal</th>
+              <th>Value</th>
+              <th>Z-Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            {anomalyReport.anomalies.length ? (
+              anomalyReport.anomalies.map((point) => (
+                <tr key={point.label}>
+                  <td>{point.label}</td>
+                  <td>{point.value.toFixed(2)}</td>
+                  <td>{point.zScore.toFixed(2)}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={3}>No anomalies above 3σ threshold in current KPI impact series.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </section>
 
       <section className="table-wrap">

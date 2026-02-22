@@ -34,6 +34,34 @@
   font-weight: 800;
 }
 
+.insight-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.insight-card {
+  border: 1px solid #e3eefe;
+  border-radius: 10px;
+  padding: 10px;
+  background: #fbfdff;
+}
+
+.insight-card h3 {
+  margin: 0 0 6px;
+  font-size: 0.95rem;
+  color: #3d6387;
+}
+
+.insight-card p {
+  margin: 0 0 6px;
+}
+
+.formula-line {
+  word-break: break-word;
+  font-family: inherit;
+}
+
 .table-wrap {
   margin-top: 18px;
   background: #fff;
@@ -76,6 +104,15 @@
 .action.retire {
   color: #b62121;
   font-weight: 700;
+}
+
+.matrix-active {
+  color: #1b8f35;
+  font-weight: 700;
+}
+
+.matrix-inactive {
+  color: #3d6387;
 }
 
 @media (max-width: 760px) {

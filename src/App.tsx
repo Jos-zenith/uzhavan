@@ -2,12 +2,14 @@ import React from 'react';
 import './App.css';
 import {
   clearDraft,
+  getDraftAbandonmentAnalytics,
   getDraftResumePrompt,
   getVitalServices,
   initializeDatabase,
   loadDraftPayload,
   processSyncQueue,
   saveDraftFieldAtomic,
+  type DraftAbandonmentAnalytics,
   type VitalService,
 } from './sqlite';
 import {
@@ -16,6 +18,9 @@ import {
   type ConnectivityState,
 } from './connectivity';
 import RoiPortfolioScreen from './RoiPortfolioScreen';
+import AdminPanelScreen from './AdminPanelScreen';
+import DeveloperToolsScreen from './DeveloperToolsScreen';
+import SyncStatusScreen from './SyncStatusScreen';
 
 const BENEFIT_REGISTRATION_SERVICE_ID = 2;
 const BENEFIT_DRAFT_KEY = 'benefit_registration';
@@ -34,7 +39,14 @@ const EMPTY_DRAFT: DraftFields = {
   bankInfo: '',
 };
 
-type AppView = 'overview' | 'draft' | 'services' | 'roi';
+type AppView =
+  | 'overview'
+  | 'draft'
+  | 'services'
+  | 'sync'
+  | 'roi'
+  | 'admin'
+  | 'developer';
 
 function App() {
   const [status, setStatus] = React.useState('Initializing offline foundation...');
@@ -45,8 +57,19 @@ function App() {
   const [draft, setDraft] = React.useState<DraftFields>(EMPTY_DRAFT);
   const [showResumePrompt, setShowResumePrompt] = React.useState(false);
   const [lastSavedAt, setLastSavedAt] = React.useState<string>('');
+  const [draftAnalytics, setDraftAnalytics] = React.useState<DraftAbandonmentAnalytics | null>(
+    null
+  );
   const [activeView, setActiveView] = React.useState<AppView>('overview');
   const [serviceSearch, setServiceSearch] = React.useState('');
+
+  const refreshDraftAnalytics = React.useCallback(async () => {
+    const analytics = await getDraftAbandonmentAnalytics(
+      BENEFIT_REGISTRATION_SERVICE_ID,
+      BENEFIT_DRAFT_KEY
+    );
+    setDraftAnalytics(analytics);
+  }, []);
 
   React.useEffect(() => {
     let isMounted = true;
@@ -73,6 +96,7 @@ function App() {
         setServices(serviceRows);
         setShowResumePrompt(resumePrompt.hasDraft);
         setStatus(`Offline foundation ready. Loaded ${serviceCount} services.`);
+        await refreshDraftAnalytics();
 
         if (connectivity.isOnline) {
           await processSyncQueue();
@@ -94,7 +118,7 @@ function App() {
       isMounted = false;
       unsubscribe();
     };
-  }, [connectivity.isOnline]);
+  }, [connectivity.isOnline, refreshDraftAnalytics]);
 
   const handleDraftFieldChange =
     (fieldName: keyof DraftFields) => async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -113,6 +137,7 @@ function App() {
       );
 
       setLastSavedAt(new Date().toLocaleTimeString());
+      await refreshDraftAnalytics();
     };
 
   const handleResumeDraft = async () => {
@@ -131,6 +156,7 @@ function App() {
     }
 
     setShowResumePrompt(false);
+    await refreshDraftAnalytics();
   };
 
   const handleStartFresh = async () => {
@@ -138,6 +164,7 @@ function App() {
     setDraft(EMPTY_DRAFT);
     setShowResumePrompt(false);
     setLastSavedAt('');
+    await refreshDraftAnalytics();
   };
 
   const completedDraftFields = React.useMemo(() => {
@@ -168,7 +195,8 @@ function App() {
             <p className="status-text">{status}</p>
           </div>
           <div className="connectivity-chip">
-            Connectivity: <strong>{connectivity.label}</strong>
+            Connectivity: <strong>{connectivity.label}</strong> · Network:{' '}
+            <strong>{connectivity.networkType}</strong>
           </div>
         </header>
 
@@ -192,10 +220,28 @@ function App() {
             Services
           </button>
           <button
+            className={activeView === 'sync' ? 'nav-btn active' : 'nav-btn'}
+            onClick={() => setActiveView('sync')}
+          >
+            Sync Status
+          </button>
+          <button
             className={activeView === 'roi' ? 'nav-btn active' : 'nav-btn'}
             onClick={() => setActiveView('roi')}
           >
             ROI & Governance
+          </button>
+          <button
+            className={activeView === 'admin' ? 'nav-btn active' : 'nav-btn'}
+            onClick={() => setActiveView('admin')}
+          >
+            Admin
+          </button>
+          <button
+            className={activeView === 'developer' ? 'nav-btn active' : 'nav-btn'}
+            onClick={() => setActiveView('developer')}
+          >
+            Developer Tools
           </button>
         </nav>
 
@@ -211,7 +257,13 @@ function App() {
             </article>
             <article className="summary-card">
               <h3>Draft Status</h3>
-              <p>{showResumePrompt ? 'Saved draft detected' : 'No pending resume'}</p>
+              <p>
+                {draftAnalytics?.isAbandoned
+                  ? `Abandoned (${draftAnalytics.resumeCount} resumes)`
+                  : showResumePrompt
+                    ? 'Saved draft detected'
+                    : 'No pending resume'}
+              </p>
             </article>
             <article className="summary-card">
               <h3>Last Saved</h3>
@@ -312,6 +364,24 @@ function App() {
         {activeView === 'roi' && (
           <section className="panel roi-panel">
             <RoiPortfolioScreen />
+          </section>
+        )}
+
+        {activeView === 'sync' && (
+          <section className="panel">
+            <SyncStatusScreen />
+          </section>
+        )}
+
+        {activeView === 'admin' && (
+          <section className="panel">
+            <AdminPanelScreen />
+          </section>
+        )}
+
+        {activeView === 'developer' && (
+          <section className="panel">
+            <DeveloperToolsScreen />
           </section>
         )}
       </div>

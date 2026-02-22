@@ -1,0 +1,203 @@
+.devtools-root {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.devtools-header {
+  background: #fff;
+  border: 1px solid #d9e7fb;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.devtools-header h2 {
+  margin: 0;
+}
+
+.devtools-header p {
+  margin: 6px 0 0;
+  color: #4b6786;
+}
+
+.devtools-capability-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.devtools-capability-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #e4eefc;
+  border-radius: 8px;
+  background: #fbfdff;
+  padding: 6px 8px;
+  color: #355578;
+}
+
+.devtools-capability-status {
+  line-height: 1;
+}
+
+.devtools-feedback {
+  margin-top: 8px;
+  border: 1px solid #cfe0fb;
+  border-radius: 8px;
+  background: #f7fbff;
+  color: #1f4a79;
+  padding: 8px 10px;
+}
+
+.devtools-card {
+  background: #fff;
+  border: 1px solid #d9e7fb;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.devtools-card h3 {
+  margin: 0 0 10px;
+}
+
+.devtools-grid-two {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 12px;
+}
+
+.devtools-docs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 10px;
+}
+
+.devtools-doc-card {
+  border: 1px solid #e4eefc;
+  border-radius: 10px;
+  background: #fbfdff;
+  padding: 10px;
+}
+
+.devtools-doc-card h4 {
+  margin: 0 0 6px;
+}
+
+.devtools-doc-card p {
+  color: #4b6786;
+  margin: 0 0 8px;
+}
+
+.devtools-doc-card pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: #f5f8fc;
+  border: 1px solid #e4eefc;
+  border-radius: 8px;
+  padding: 8px;
+  color: #1f4a79;
+}
+
+.devtools-form-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.devtools-form-grid input,
+.devtools-form-grid select,
+.devtools-form-grid button,
+.actions button,
+.devtools-card > button {
+  border: 1px solid #cfe0fb;
+  border-radius: 8px;
+  background: #fff;
+  color: #1f4a79;
+  padding: 8px 10px;
+}
+
+.devtools-form-grid button,
+.actions button,
+.devtools-card > button {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.devtools-form-grid .wide {
+  grid-column: span 2;
+}
+
+.devtools-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #355578;
+}
+
+.devtools-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.devtools-metrics-grid > div {
+  border: 1px solid #e4eefc;
+  border-radius: 10px;
+  background: #fbfdff;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.devtools-metrics-grid .label {
+  color: #4b6786;
+  font-size: 0.85rem;
+}
+
+.devtools-inline-note {
+  color: #4b6786;
+}
+
+.devtools-table-wrap {
+  overflow-x: auto;
+  margin-top: 10px;
+}
+
+.devtools-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.devtools-table th,
+.devtools-table td {
+  border: 1px solid #e4eefc;
+  text-align: left;
+  padding: 8px;
+  vertical-align: top;
+}
+
+.devtools-table th {
+  background: #f7fbff;
+  color: #355578;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+@media (max-width: 960px) {
+  .devtools-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .devtools-form-grid .wide {
+    grid-column: span 2;
+  }
+}

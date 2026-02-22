@@ -1,0 +1,156 @@
+.admin-panel-root {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-header {
+  border: 1px solid #d9e7fb;
+  border-radius: 12px;
+  background: #fff;
+  padding: 12px;
+}
+
+.admin-header h2 {
+  margin: 0;
+}
+
+.admin-header p {
+  margin: 6px 0 0;
+  color: #4b6786;
+}
+
+.admin-feedback {
+  margin-top: 8px;
+  border: 1px solid #cfe0fb;
+  border-radius: 8px;
+  background: #f7fbff;
+  color: #1f4a79;
+  padding: 8px 10px;
+}
+
+.admin-grid-two {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 12px;
+}
+
+.admin-card {
+  border: 1px solid #d9e7fb;
+  border-radius: 12px;
+  background: #fff;
+  padding: 12px;
+}
+
+.admin-card h3 {
+  margin: 0 0 10px;
+}
+
+.admin-form-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.admin-form-grid input,
+.admin-form-grid select,
+.admin-form-grid button,
+.actions button {
+  border: 1px solid #cfe0fb;
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #fff;
+  color: #1f4a79;
+}
+
+.admin-form-grid .wide {
+  grid-column: span 2;
+}
+
+.admin-form-grid button,
+.actions button {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.admin-table-wrap {
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-table th,
+.admin-table td {
+  border: 1px solid #e4eefc;
+  padding: 8px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.admin-table th {
+  background: #f7fbff;
+  color: #355578;
+}
+
+.admin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-list-item {
+  border: 1px solid #e4eefc;
+  border-radius: 10px;
+  background: #fbfdff;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.admin-list-item p {
+  margin: 4px 0 0;
+  color: #4b6786;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.metrics-list {
+  margin: 0;
+  padding-left: 18px;
+  color: #355578;
+}
+
+.metrics-list li {
+  margin: 5px 0;
+}
+
+.admin-inline-note {
+  color: #4b6786;
+  margin: 8px 0;
+  word-break: break-all;
+}
+
+.muted {
+  color: #4b6786;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 960px) {
+  .admin-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-form-grid .wide {
+    grid-column: span 2;
+  }
+}
