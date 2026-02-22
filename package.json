@@ -1,60 +1,30 @@
 {
-  "name": "my-app",
+  "name": "uzhavan-docs",
   "version": "0.1.0",
   "private": true,
-  "dependencies": {
-    "@testing-library/dom": "^10.4.1",
-    "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.2",
-    "@testing-library/user-event": "^13.5.0",
-    "@types/crypto-js": "^4.2.2",
-    "@types/jest": "^27.5.2",
-    "@types/node": "^16.18.126",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "crypto-js": "^4.2.0",
-    "expo": "^54.0.33",
-    "expo-sqlite": "^16.0.10",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
-    "react-native": "^0.84.0",
-    "react-native-web": "^0.21.2",
-    "react-scripts": "5.0.1",
-    "typescript": "^4.9.5",
-    "web-vitals": "^2.1.4",
-    "xlsx": "^0.18.5"
-  },
   "scripts": {
+    "dev": "cd docs-site && npx docusaurus start --port 3000 --host 0.0.0.0",
+    "build": "cd docs-site && npm run build",
+    "serve": "cd docs-site && npm run serve",
     "setup:project": "node scripts/project-setup.js",
-    "setup:verify": "node scripts/project-setup.js --verify",
-    "dev": "npm --prefix docs-site start -- --port 3000",
-    "start": "craco start",
-    "build": "craco build",
-    "test": "craco test",
-    "eject": "react-scripts eject",
-    "docs:start": "npm --prefix docs-site start",
-    "docs:build": "npm --prefix docs-site run build",
-    "docs:serve": "npm --prefix docs-site run serve"
+    "setup:verify": "node scripts/project-setup.js --verify"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+  "dependencies": {
+    "@docusaurus/core": "3.9.2",
+    "@docusaurus/preset-classic": "3.9.2",
+    "@mdx-js/react": "^3.0.0",
+    "clsx": "^2.0.0",
+    "prism-react-renderer": "^2.3.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@craco/craco": "^7.1.0"
+    "@docusaurus/module-type-aliases": "3.9.2",
+    "@docusaurus/tsconfig": "3.9.2",
+    "@docusaurus/types": "3.9.2",
+    "typescript": "~5.6.2"
+  },
+  "engines": {
+    "node": ">=20.0"
   }
 }
