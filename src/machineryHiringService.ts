@@ -8,7 +8,7 @@
  * Provides machinery booking, hiring centre directory, and mechanic contact
  */
 
-import * as XLSX from 'xlsx';
+import { clearServiceDataCache, getService6Dataset } from './serviceDataLoader';
 
 // ============================================================
 // TYPE DEFINITIONS
@@ -117,8 +117,8 @@ export type UsageStatistics = {
 class MachineryHiringService {
   private machineryData: MachineryData[] = [];
   private mechanicData: MechanicData[] = [];
-  private cacheKey = 'victori_machinery_data';
-  private mechanicCacheKey = 'victori_mechanic_data';
+  private cacheKey = 'victori_machinery_data_v2';
+  private mechanicCacheKey = 'victori_mechanic_data_v2';
   private bookingKey = 'victori_machinery_bookings';
   private repairKey = 'victori_repair_requests';
   private cacheDuration = 6 * 60 * 60 * 1000; // 6 hours
@@ -138,49 +138,23 @@ class MachineryHiringService {
     }
 
     try {
-      // Fetch Excel file
-      const response = await fetch('/data/uzhavan.xlsx');
-      if (!response.ok) {
-        throw new Error('Failed to fetch uzhavan.xlsx');
-      }
-
-      const arrayBuffer = await response.arrayBuffer();
-      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-
-      // Read tractor sheet
-      const tractorSheet = workbook.Sheets['tractor'];
-      if (!tractorSheet) {
-        throw new Error('tractor sheet not found in uzhavan.xlsx');
-      }
-
-      const jsonData = XLSX.utils.sheet_to_json<any>(tractorSheet);
-
-      // Parse machinery data
-      this.machineryData = jsonData.map((row) => {
-        const district = String(row['District'] || row['district'] || '').trim();
-        const block = String(row['Block'] || row['block'] || '').trim();
-        const machineryType = this.normalizeMachineryType(
-          String(row['Machinery Type'] || row['machinery_type'] || row['Type'] || 'Other')
-        );
-        const contactNumber = String(row['Contact Number'] || row['contact_number'] || row['Mobile'] || '').trim();
-        const hiringRate = Number(row['Hire_Charges_per_Hour'] || row['hire_charges'] || row['Rate'] || 0);
-
-        return {
-          district,
-          block,
-          machineryType,
-          ownerName: String(row['Owner Name'] || row['owner_name'] || '').trim() || undefined,
-          contactNumber,
-          hiringRate,
-          availability: (row['Availability'] || 'Available') as any,
-          horsepower: Number(row['HP'] || row['horsepower'] || 0) || undefined,
-          brand: String(row['Brand'] || row['brand'] || '').trim() || undefined,
-          model: String(row['Model'] || row['model'] || '').trim() || undefined,
-          yearOfManufacture: Number(row['Year'] || row['year'] || 0) || undefined,
-          location: String(row['Location'] || row['location'] || '').trim() || undefined,
-          address: String(row['Address'] || row['address'] || '').trim() || undefined,
-        };
-      }).filter(m => m.district && m.machineryType);
+      const dataset = await getService6Dataset();
+      this.machineryData = dataset.machinery
+        .map((item) => ({
+          district: item.district,
+          block: item.block,
+          machineryType: this.normalizeMachineryType(item.machineryType),
+          ownerName: item.ownerName || undefined,
+          contactNumber: item.contactNumber,
+          hiringRate: item.hiringRate,
+          availability: 'Available' as const,
+          horsepower: item.horsepower ?? undefined,
+          brand: item.brand || undefined,
+          model: item.model || undefined,
+          location: item.location || undefined,
+          address: item.address || undefined,
+        }))
+        .filter((item) => item.district && item.contactNumber);
 
       // Cache the data
       localStorage.setItem(
@@ -213,47 +187,18 @@ class MachineryHiringService {
     }
 
     try {
-      // Fetch Excel file
-      const response = await fetch('/data/uzhavan.xlsx');
-      if (!response.ok) {
-        throw new Error('Failed to fetch uzhavan.xlsx');
-      }
-
-      const arrayBuffer = await response.arrayBuffer();
-      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-
-      // Read mechanic sheet
-      const mechanicSheet = workbook.Sheets['mechanic'];
-      if (!mechanicSheet) {
-        console.warn('mechanic sheet not found, using mock data');
-        return this.getMockMechanicData();
-      }
-
-      const jsonData = XLSX.utils.sheet_to_json<any>(mechanicSheet);
-
-      // Parse mechanic data
-      this.mechanicData = jsonData.map((row) => {
-        const district = String(row['District'] || row['district'] || '').trim();
-        const mechanicName = String(row['Mechanic Name'] || row['mechanic_name'] || row['Name'] || '').trim();
-        const contactNumber = String(row['Contact Number'] || row['contact_number'] || row['Mobile'] || '').trim();
-        const specialization = String(row['Specialization'] || row['specialization'] || 'All')
-          .split(',')
-          .map(s => s.trim())
-          .filter(Boolean);
-
-        return {
-          district,
-          block: String(row['Block'] || row['block'] || '').trim() || undefined,
-          mechanicName,
-          contactNumber,
-          specialization,
-          experience: Number(row['Experience'] || row['experience'] || 0) || undefined,
-          availability: (row['Availability'] || 'Available') as any,
-          serviceRate: Number(row['Service Rate'] || row['service_rate'] || row['Rate'] || 0) || undefined,
-          address: String(row['Address'] || row['address'] || '').trim() || undefined,
-          workingHours: String(row['Working Hours'] || row['working_hours'] || '9 AM - 6 PM').trim() || undefined,
-        };
-      }).filter(m => m.district && m.mechanicName && m.contactNumber);
+      const dataset = await getService6Dataset();
+      this.mechanicData = dataset.mechanics
+        .map((item) => ({
+          district: item.district,
+          block: item.block || undefined,
+          mechanicName: item.mechanicName,
+          contactNumber: item.contactNumber,
+          specialization: item.specialization,
+          availability: 'Available' as const,
+          workingHours: item.workingHours || undefined,
+        }))
+        .filter((item) => item.district && item.mechanicName && item.contactNumber);
 
       // Cache the data
       localStorage.setItem(
@@ -584,6 +529,7 @@ class MachineryHiringService {
   clearCache(): void {
     localStorage.removeItem(this.cacheKey);
     localStorage.removeItem(this.mechanicCacheKey);
+    clearServiceDataCache();
     this.machineryData = [];
     this.mechanicData = [];
   }

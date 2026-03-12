@@ -1,0 +1,259 @@
+{
+  "serviceId": 9,
+  "generatedAt": "2026-03-12T08:28:44.571188Z",
+  "sourceDocument": "agri_e_cc_2025_26_removed.pdf",
+  "officerVisitDetails": [
+    {
+      "officerId": "AOHO-001",
+      "designation": "Assistant Seed Officer",
+      "level": "Village Level",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    },
+    {
+      "officerId": "AOHO-002",
+      "designation": "Deputy Agricultural Officer",
+      "level": "Block Level",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    },
+    {
+      "officerId": "AOHO-003",
+      "designation": "Agricultural Officer",
+      "level": "Block Level",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    },
+    {
+      "officerId": "AOHO-004",
+      "designation": "Assistant Director of Agriculture (Assistant General Manager\u2013 TANSEDA)",
+      "level": "Block Level",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    },
+    {
+      "officerId": "AOHO-005",
+      "designation": "Deputy Director of Agriculture (Deputy General Manager \u2013 TANSEDA)",
+      "level": "District Level",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    },
+    {
+      "officerId": "AOHO-006",
+      "designation": "Joint Director of Agriculture (General Manager \u2013 TANSEDA)",
+      "level": "District Level",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    },
+    {
+      "officerId": "AOHO-007",
+      "designation": "Assistant Agriculture Officer",
+      "level": "Village Level",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    },
+    {
+      "officerId": "AOHO-008",
+      "designation": "Assistant Agricultural Officer",
+      "level": "Village Level",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    },
+    {
+      "officerId": "AOHO-009",
+      "designation": "Deputy Director of Agriculture (Deputy General Manager \u2013 TANSEDA) Joint Director of Agriculture (General Manager \u2013 TANSEDA)",
+      "level": "District Level",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    },
+    {
+      "officerId": "AOHO-010",
+      "designation": "Assistant Director of Agriculture",
+      "level": "Block Level",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    },
+    {
+      "officerId": "AOHO-011",
+      "designation": "Assistant Director of Agriculture (Information)",
+      "level": "District Level",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    },
+    {
+      "officerId": "AOHO-012",
+      "designation": "Joint Director of Agriculture",
+      "level": "District Level",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    },
+    {
+      "officerId": "AOHO-013",
+      "designation": "Mobile Soil Testing Laboratory. Assistant Director of Agriculture (Information)",
+      "level": "District Level",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    },
+    {
+      "officerId": "AOHO-014",
+      "designation": "Joint Director of Agriculture.",
+      "level": "District Level",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    },
+    {
+      "officerId": "AOHO-015",
+      "designation": "Assistant Horticultural Officer",
+      "level": "Village Level",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    },
+    {
+      "officerId": "AOHO-016",
+      "designation": "Deputy Horticultural Officer",
+      "level": "Block Level",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    },
+    {
+      "officerId": "AOHO-017",
+      "designation": "Horticultural officer",
+      "level": "Block Level",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    },
+    {
+      "officerId": "AOHO-018",
+      "designation": "Assistant Director of Horticulture",
+      "level": "Block Level",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    },
+    {
+      "officerId": "AOHO-019",
+      "designation": "Deputy Director of Agriculture (SS)",
+      "level": "District Level",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    },
+    {
+      "officerId": "AOHO-020",
+      "designation": "Deputy Director of Horticulture",
+      "level": "District Level",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    },
+    {
+      "officerId": "AOHO-021",
+      "designation": "Deputy Director of Agriculture (AB)",
+      "level": "District Level",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    },
+    {
+      "officerId": "AOHO-022",
+      "designation": "Deputy Director of Agriculture(SI)",
+      "level": "District Level",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    },
+    {
+      "officerId": "AOHO-023",
+      "designation": "Deputy Agricultural Officer",
+      "level": "Field",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    },
+    {
+      "officerId": "AOHO-024",
+      "designation": "Assistant Seed Officer",
+      "level": "Block Level",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    },
+    {
+      "officerId": "AOHO-025",
+      "designation": "Joint Director of Agriculture",
+      "level": "Field",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    },
+    {
+      "officerId": "AOHO-026",
+      "designation": "Assistant Director of Agriculture (Block Technology Team convener)",
+      "level": "Block Level",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    },
+    {
+      "officerId": "AOHO-027",
+      "designation": "Project Director. (ATMA) Agricultural Technology Management Agency.",
+      "level": "District Level",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    },
+    {
+      "officerId": "AOHO-028",
+      "designation": "Assistant Horticulture Officer",
+      "level": "Village Level",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    },
+    {
+      "officerId": "AOHO-029",
+      "designation": "Deputy Director of Agriculture (FTC)",
+      "level": "Field",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    },
+    {
+      "officerId": "AOHO-030",
+      "designation": "Horticulture Officer",
+      "level": "Block Level",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    },
+    {
+      "officerId": "AOHO-031",
+      "designation": "Deputy Horticulture Officer",
+      "level": "Block Level",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    },
+    {
+      "officerId": "AOHO-032",
+      "designation": "Joint Director of Horticulture",
+      "level": "District Level",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    },
+    {
+      "officerId": "AOHO-033",
+      "designation": "Deputy Director of Horticulture. Department of Agriculture",
+      "level": "District Level",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    },
+    {
+      "officerId": "AOHO-034",
+      "designation": "Agriculture Officer",
+      "level": "Block Level",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    },
+    {
+      "officerId": "AOHO-035",
+      "designation": "Deputy Agriculture Officer",
+      "level": "Block Level",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    },
+    {
+      "officerId": "AOHO-036",
+      "designation": "Horticulture Officer",
+      "level": "Field",
+      "visitDetails": "Visit details available via local agriculture office and Uzhavar app schedule updates.",
+      "contactScope": "Scheme eligibility, enrollment support, and field-level guidance"
+    }
+  ]
+}

@@ -30,6 +30,30 @@ If the repository is already available locally, open the `my-app` folder directl
 npm install
 ```
 
+## 2.1) Configure OpenWeatherMap API Key
+
+Create a `.env` file in the app root (same folder as `package.json`) and add:
+
+```bash
+REACT_APP_OPENWEATHER_API_KEY=<your_openweathermap_api_key>
+```
+
+Notes:
+
+- You can copy from `.env.example`.
+- Restart `npm start` after adding or changing `.env` values.
+
+Optional telemetry and ROI demo controls:
+
+```bash
+REACT_APP_TELEMETRY_ENDPOINT=<your_ingestion_api_url>
+REACT_APP_TELEMETRY_API_KEY=<your_ingestion_api_key>
+REACT_APP_ROI_DEMO_MODE=true
+```
+
+- If telemetry endpoint is configured, SDK flush batches are posted to that endpoint.
+- Set `REACT_APP_ROI_DEMO_MODE=false` to prevent synthetic KPI event injection in ROI dashboard.
+
 ## 3) Validate Project Setup
 
 Run verification checks before first run:

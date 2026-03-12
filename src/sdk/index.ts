@@ -2,6 +2,7 @@ export * from './types';
 export * from './storage';
 export * from './queue';
 export * from './telemetry';
+export * from './httpTransport';
 export * from './offline';
 export * from './policy';
 export * from './roi';

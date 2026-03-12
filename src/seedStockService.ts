@@ -10,6 +10,7 @@
  */
 
 import * as XLSX from 'xlsx';
+import { clearServiceDataCache, getService5Dataset } from './serviceDataLoader';
 
 export interface SeedStock {
   district: string;
@@ -78,7 +79,7 @@ export class SeedStockService {
     farmsByDistrict: {},
     categoriesByFarm: {}
   };
-  private cacheKey = 'seedlings_stock_cache';
+  private cacheKey = 'seedlings_stock_cache_v2';
   private cacheDurationMs = 12 * 60 * 60 * 1000; // 12 hours (peak sowing season)
 
   /**
@@ -94,13 +95,9 @@ export class SeedStockService {
         return;
       }
 
-      // Load from Excel file
-      const response = await fetch(excelPath);
-      const buffer = await response.arrayBuffer();
-      const workbook = XLSX.read(buffer, { type: 'array' });
-
-      // Parse main sheet
-      this.parseStockSheet(workbook);
+      void excelPath;
+      const dataset = await getService5Dataset();
+      this.stockData = dataset.stock;
 
       // Build location hierarchy
       this.buildHierarchy();
@@ -531,6 +528,7 @@ export class SeedStockService {
    */
   clearCache(): void {
     localStorage.removeItem(this.cacheKey);
+    clearServiceDataCache();
   }
 
   /**
@@ -552,4 +550,6 @@ export class SeedStockService {
   }
 }
 
-export default new SeedStockService();
+const seedStockService = new SeedStockService();
+
+export default seedStockService;

@@ -3,7 +3,7 @@
  * Uses river sheet from uzhavan.xlsx for real-time water level monitoring
  */
 
-import * as XLSX from 'xlsx';
+import { clearServiceDataCache, getService10Dataset } from './serviceDataLoader';
 
 export type ReservoirData = {
   district: string;
@@ -93,90 +93,36 @@ class ReservoirService {
    */
   async loadReservoirData(): Promise<void> {
     try {
-      const response = await fetch(this.workbookPath);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch workbook: ${response.status}`);
-      }
-
-      const arrayBuffer = await response.arrayBuffer();
-      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-
-      // Load river sheet
-      const riverSheet = workbook.Sheets['river'];
-      if (!riverSheet) {
-        throw new Error('River sheet not found in workbook');
-      }
-
-      const riverData = XLSX.utils.sheet_to_json(riverSheet);
-
-      // Parse river data into reservoir records
+      const dataset = await getService10Dataset();
       this.reservoirs.clear();
-      
-      riverData.forEach((row: any) => {
-        const district = String(row['District'] || row['district'] || '').trim();
-        const block = String(row['Block'] || row['block'] || '').trim();
-        const station = String(row['Station'] || row['station'] || row['Name'] || '').trim();
-        const riverName = String(row['River'] || row['river'] || row['River Name'] || '').trim();
-        
-        if (!station || !district) return;
-
-        // Parse water levels (with fallbacks for different column names)
-        const currentLevel = parseFloat(row['Current_Level'] || row['Level'] || row['Water_Level'] || 0);
-        const frl = parseFloat(row['FRL'] || row['Full_Reservoir_Level'] || row['Maximum_Level'] || 100);
-        const dsl = parseFloat(row['DSL'] || row['Dead_Storage_Level'] || row['Minimum_Level'] || 10);
-        const totalCapacity = parseFloat(row['Total_Capacity'] || row['Capacity'] || row['Total_Storage'] || 1000);
-        const liveStorage = parseFloat(row['Live_Storage'] || row['Available_Storage'] || totalCapacity * 0.85);
-        const currentStorage = parseFloat(row['Current_Storage'] || row['Storage'] || (totalCapacity * currentLevel / frl));
-        const inflow = parseFloat(row['Inflow'] || row['Inflow_Rate'] || 0);
-        const outflow = parseFloat(row['Outflow'] || row['Release'] || row['Discharge'] || 0);
-        const flowRate = inflow - outflow;
-
-        // Calculate percentage and status
-        const percentageFull = frl > 0 ? Math.min(100, (currentLevel / frl) * 100) : 0;
-        
-        let status: ReservoirData['status'] = 'moderate';
-        let alertLevel: ReservoirData['alertLevel'] = 'normal';
-
-        if (percentageFull >= 90) {
-          status = 'full';
-          alertLevel = percentageFull >= 95 ? 'warning' : 'normal';
-        } else if (percentageFull >= 60) {
-          status = 'good';
-        } else if (percentageFull >= 40) {
-          status = 'moderate';
-        } else if (percentageFull >= 20) {
-          status = 'low';
-          alertLevel = 'warning';
-        } else {
-          status = 'critical';
-          alertLevel = 'danger';
-        }
-
+      dataset.reservoirs.forEach((item) => {
         const reservoirData: ReservoirData = {
-          district,
-          block,
-          station,
-          riverName,
-          damName: TN_MAJOR_RESERVOIRS.find(dam => 
-            station.toLowerCase().includes(dam.toLowerCase()) ||
-            riverName.toLowerCase().includes(dam.toLowerCase())
-          ),
-          currentLevel,
-          fullReservoirLevel: frl,
-          deadStorageLevel: dsl,
-          totalCapacity,
-          liveStorage,
-          currentStorage,
-          flowRate,
-          inflow,
-          outflow,
-          percentageFull,
-          status,
-          alertLevel,
-          lastUpdated: Date.now(),
+          district: item.district,
+          block: item.block,
+          station: item.station,
+          riverName: item.riverName,
+          damName:
+            TN_MAJOR_RESERVOIRS.find(
+              (dam) =>
+                item.station.toLowerCase().includes(dam.toLowerCase()) ||
+                item.riverName.toLowerCase().includes(dam.toLowerCase())
+            ) || item.damName,
+          currentLevel: item.currentLevel,
+          fullReservoirLevel: item.fullReservoirLevel,
+          deadStorageLevel: item.deadStorageLevel,
+          totalCapacity: item.totalCapacity,
+          liveStorage: item.liveStorage,
+          currentStorage: item.currentStorage,
+          flowRate: item.flowRate,
+          inflow: item.inflow,
+          outflow: item.outflow,
+          percentageFull: item.percentageFull,
+          status: item.status,
+          alertLevel: item.alertLevel,
+          lastUpdated: new Date(item.lastUpdated).getTime() || Date.now(),
         };
 
-        const key = `${district.toLowerCase()}_${station.toLowerCase()}`;
+        const key = `${item.district.toLowerCase()}_${item.station.toLowerCase()}`;
         this.reservoirs.set(key, reservoirData);
       });
 
@@ -462,6 +408,7 @@ class ReservoirService {
   clearCache(): void {
     try {
       localStorage.removeItem(RESERVOIR_CACHE_KEY);
+      clearServiceDataCache();
       this.loaded = false;
       this.reservoirs.clear();
     } catch (error) {

@@ -1,7 +1,13 @@
 /**
  * Service #4: Fertilizer Stock Browser
- * Data Source: tn_fertilizer_stock.csv
+ * Data Source: service-4-fertilizer-stock.json
  */
+
+import {
+  clearServiceDataCache,
+  getService4Dataset,
+  type Service4Dataset,
+} from './serviceDataLoader';
 
 export type FertilizerAvailability = 'In Stock' | 'Low Stock' | 'Out of Stock';
 export type FertilizerSourceType = 'Imported' | 'Domestic' | 'Other';
@@ -49,10 +55,19 @@ export class FertilizerStockService {
   private data: FertilizerStock[] = [];
   private districtList: string[] = [];
   private fertilizerList: string[] = [];
-  private readonly cacheKey = 'fertilizer_stock_cache_v1';
+  private readonly cacheKey = 'fertilizer_stock_cache_v2';
   private readonly cacheDurationMs = 12 * 60 * 60 * 1000;
+  private datasetPromise: Promise<Service4Dataset> | null = null;
 
-  async initialize(csvPath: string): Promise<void> {
+  private async getDataset(): Promise<Service4Dataset> {
+    if (!this.datasetPromise) {
+      this.datasetPromise = getService4Dataset();
+    }
+
+    return this.datasetPromise;
+  }
+
+  async initialize(dataPath: string): Promise<void> {
     try {
       const cached = this.loadFromCache();
       if (cached) {
@@ -61,17 +76,16 @@ export class FertilizerStockService {
         return;
       }
 
-      const response = await fetch(csvPath);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch CSV: ${response.status}`);
-      }
-
-      const csvText = await response.text();
-      this.data = this.parseCsvToRows(csvText);
-
-      if (!this.data.length) {
-        this.loadMockData();
-      }
+      void dataPath;
+      const dataset = await this.getDataset();
+      this.data = dataset.stock.map((record) => ({
+        district: record.district,
+        fertilizerName: record.fertilizerName,
+        quantity: record.quantity,
+        availability: record.availability,
+        sourceType: record.sourceType,
+        updatedOn: record.updatedOn,
+      }));
 
       this.rebuildIndexes();
       this.saveToCache();
@@ -351,6 +365,8 @@ export class FertilizerStockService {
 
   clearCache(): void {
     localStorage.removeItem(this.cacheKey);
+    clearServiceDataCache();
+    this.datasetPromise = null;
   }
 
   getCacheInfo(): { cached: boolean; date: string | null } {

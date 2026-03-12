@@ -1,6 +1,7 @@
 /**
- * Insurance Service for Service #13: Insurance Premium Calculator
+ * Insurance Service for Service #3: Crop Insurance
  * Direct integration with PMFBY (Pradhan Mantri Fasal Bima Yojana)
+ * Data Source: TN Government Gazette (Annexures)
  */
 
 export type CropInsuranceType = 'kharif' | 'rabi' | 'annual_horticultural' | 'annual_commercial';

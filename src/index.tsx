@@ -3,14 +3,23 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import { OfflineAgriSdkProvider } from './sdk';
+import { createHttpTelemetryTransport, OfflineAgriSdkProvider } from './sdk';
+
+const telemetryEndpoint = (process.env.REACT_APP_TELEMETRY_ENDPOINT || '').trim();
+const telemetryApiKey = (process.env.REACT_APP_TELEMETRY_API_KEY || '').trim();
+const telemetryTransport = telemetryEndpoint
+  ? createHttpTelemetryTransport({
+      endpoint: telemetryEndpoint,
+      apiKey: telemetryApiKey || undefined,
+    })
+  : undefined;
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 root.render(
   <React.StrictMode>
-    <OfflineAgriSdkProvider>
+    <OfflineAgriSdkProvider telemetryTransport={telemetryTransport}>
       <App />
     </OfflineAgriSdkProvider>
   </React.StrictMode>

@@ -585,4 +585,6 @@ export class AgricultureNewsService {
   }
 }
 
-export default new AgricultureNewsService();
+const agricultureNewsService = new AgricultureNewsService();
+
+export default agricultureNewsService;

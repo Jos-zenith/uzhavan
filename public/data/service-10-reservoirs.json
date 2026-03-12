@@ -1,0 +1,29 @@
+{
+  "serviceId": 10,
+  "generatedAt": "2026-03-12T09:03:57.627314Z",
+  "reservoirs": [
+    {
+      "district": "Ramanathapuram",
+      "block": "-",
+      "station": "Kamuthi Bridge",
+      "riverName": "Gundar",
+      "damName": "Kamuthi Bridge",
+      "currentLevel": 30.43,
+      "fullReservoirLevel": 30.43,
+      "deadStorageLevel": 0,
+      "totalCapacity": 30.43,
+      "liveStorage": 30.43,
+      "currentStorage": 30.43,
+      "flowRate": 0.0,
+      "inflow": 0.0,
+      "outflow": 0.0,
+      "percentageFull": 100.0,
+      "status": "full",
+      "alertLevel": "warning",
+      "lastUpdated": "27-01-2026 10:00",
+      "measurementTime": "27-01-2026 10:00",
+      "basin": "East flowing rivers between Pennar and Kanyakumari",
+      "agency": "Tamil Nadu SW GW"
+    }
+  ]
+}

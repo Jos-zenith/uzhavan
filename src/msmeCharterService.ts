@@ -9,6 +9,7 @@
  */
 
 import * as XLSX from 'xlsx';
+import { clearServiceDataCache, getService1Dataset } from './serviceDataLoader';
 
 export interface MSMEScheme {
   slNo: number;
@@ -89,7 +90,7 @@ const CHARTER_SCHEME_TYPES = {
 export class MSMECharterService {
   private msmeSchemes: MSMEScheme[] = [];
   private charterSchemes: CharterScheme[] = [];
-  private cacheKey = 'msme_charter_cache';
+  private cacheKey = 'msme_charter_cache_v2';
   private cacheDurationMs = 24 * 60 * 60 * 1000; // 24 hours
 
   /**
@@ -105,16 +106,20 @@ export class MSMECharterService {
         return;
       }
 
-      // Load from Excel file
-      const response = await fetch(excelPath);
-      const buffer = await response.arrayBuffer();
-      const workbook = XLSX.read(buffer, { type: 'array' });
-
-      // Parse MSME sheet
-      this.msmeSchemes = this.parseMSMESheet(workbook);
-
-      // Parse Charter sheet
-      this.charterSchemes = this.parseCharterSheet(workbook);
+      void excelPath;
+      const dataset = await getService1Dataset();
+      this.msmeSchemes = dataset.msmeSchemes.map((item) => ({
+        ...item,
+        estimatedBenefit: this.extractBenefitAmount(item.quantumOfIncentives),
+      }));
+      this.charterSchemes = dataset.charterSchemes.map((item) => ({
+        component: item.component,
+        eligibilityConditions: item.eligibilityConditions,
+        officerContact: item.officerContact,
+        department: item.department,
+        schemeType: item.schemeType || this.categorizeCharterScheme(item.component),
+        benefitAmount: this.extractBenefit(item.eligibilityConditions),
+      }));
 
       // Cache the data
       this.saveToCache();
@@ -371,7 +376,6 @@ export class MSMECharterService {
       nextSteps.push(`Maximum eligibility: ${scheme.maximumEligibility}`);
     } else {
       // Charter Scheme
-      const eligibilityText = scheme.eligibilityConditions.toLowerCase();
       reasons.push(`Eligibility: ${scheme.eligibilityConditions}`);
       nextSteps.push(`Contact: ${scheme.officerContact}`);
     }
@@ -521,6 +525,7 @@ export class MSMECharterService {
    */
   clearCache(): void {
     localStorage.removeItem(this.cacheKey);
+    clearServiceDataCache();
   }
 
   /**
@@ -542,4 +547,6 @@ export class MSMECharterService {
   }
 }
 
-export default new MSMECharterService();
+const msmeCharterService = new MSMECharterService();
+
+export default msmeCharterService;

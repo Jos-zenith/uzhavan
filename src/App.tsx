@@ -21,17 +21,20 @@ import {
   type ConnectivityState,
 } from './connectivity';
 import { computePredictiveRoi } from './roiEngine';
-import RoiPortfolioScreen from './RoiPortfolioScreen';
-import AdminPanelScreen from './AdminPanelScreen';
-import DeveloperToolsScreen from './DeveloperToolsScreen';
-import SyncStatusScreen from './SyncStatusScreen';
-import { WeatherForecastScreen } from './WeatherForecastScreen';
-import { OfficerContactInfoScreen } from './OfficerContactInfoScreen';
-import { UserFeedbackScreen } from './UserFeedbackScreen';
-import { OrganicFarmingInfoScreen } from './OrganicFarmingInfoScreen';
-import { FpoProductsScreen } from './FpoProductsScreen';
-import { AtmaTrainingRegistrationScreen } from './AtmaTrainingRegistrationScreen';
-import { UzhavanEMarketScreen } from './UzhavanEMarketScreen';
+import {
+  AdminPanelScreen,
+  AtmaTrainingRegistrationScreen,
+  DeveloperToolsScreen,
+  FpoProductsScreen,
+  MyFarmGuideScreen,
+  OfficerContactInfoScreen,
+  OrganicFarmingInfoScreen,
+  RoiPortfolioScreen,
+  SyncStatusScreen,
+  UserFeedbackScreen,
+  UzhavanEMarketScreen,
+  WeatherForecastScreen,
+} from './screens';
 
 const BENEFIT_REGISTRATION_SERVICE_ID = 2;
 const BENEFIT_DRAFT_KEY = 'benefit_registration';
@@ -78,7 +81,7 @@ type AppView =
   | 'admin'
   | 'developer';
 
-type ServiceScreenKey = 'weather' | 'officer' | 'feedback' | 'organic' | 'fpo' | 'atma' | 'market';
+type ServiceScreenKey = 'weather' | 'officer' | 'feedback' | 'organic' | 'fpo' | 'atma' | 'market' | 'farmGuide';
 
 function App() {
   const [status, setStatus] = React.useState('Initializing offline foundation...');
@@ -703,6 +706,7 @@ function App() {
                 <option value="weather">#8 Daily Weather Forecast</option>
                 <option value="officer">#9 Officer Contact Info</option>
                 <option value="feedback">#12 User Feedback</option>
+                <option value="farmGuide">#13 My Farm Guide</option>
                 <option value="organic">#14 Organic Farming Info</option>
                 <option value="fpo">#15 FPO Products</option>
                 <option value="atma">#17 ATMA Training Registration</option>
@@ -713,6 +717,7 @@ function App() {
             {activeServiceScreen === 'weather' && <WeatherForecastScreen />}
             {activeServiceScreen === 'officer' && <OfficerContactInfoScreen />}
             {activeServiceScreen === 'feedback' && <UserFeedbackScreen />}
+            {activeServiceScreen === 'farmGuide' && <MyFarmGuideScreen />}
             {activeServiceScreen === 'organic' && <OrganicFarmingInfoScreen />}
             {activeServiceScreen === 'fpo' && <FpoProductsScreen />}
             {activeServiceScreen === 'atma' && <AtmaTrainingRegistrationScreen />}

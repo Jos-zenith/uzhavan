@@ -385,8 +385,9 @@ class WeatherService {
   }
 }
 
-// Singleton instance
-export const weatherService = new WeatherService();
+// Singleton instance (read key from CRA env at startup)
+const openWeatherApiKey = (process.env.REACT_APP_OPENWEATHER_API_KEY || '').trim();
+export const weatherService = new WeatherService(openWeatherApiKey);
 
 // Export for testing/custom instances
 export default WeatherService;
