@@ -2,6 +2,7 @@ import React from 'react';
 import {
   buildFeatureSpecFromTelemetrySpec,
   type FeatureOutcomeSpec,
+  type TelemetryEvent,
   useOfflineAgriSdk,
 } from '../sdk';
 import {
@@ -13,7 +14,95 @@ import {
 import '../styles/roiPortfolio.css';
 
 const DEFAULT_DEMO_MODE =
-  (process.env.REACT_APP_ROI_DEMO_MODE || 'true').trim().toLowerCase() !== 'false';
+  (process.env.REACT_APP_ROI_DEMO_MODE || 'false').trim().toLowerCase() !== 'false';
+
+type ServiceMeasuredKpi = {
+  featureId: string;
+  serviceId: number;
+  uniqueSessions7d: number;
+  actionsCompleted7d: number;
+  successRatePercent: number;
+  p95LatencyMs: number;
+};
+
+const HERO_FEATURES: Array<{ featureId: string; serviceId: number; label: string }> = [
+  { featureId: 'WEATHER_FORECAST', serviceId: 8, label: 'Weather Forecast' },
+  { featureId: 'MARKET_PRICE', serviceId: 7, label: 'Market Price' },
+];
+
+function asNumber(value: unknown): number {
+  return typeof value === 'number' && Number.isFinite(value) ? value : 0;
+}
+
+function percentile95(values: number[]): number {
+  if (!values.length) {
+    return 0;
+  }
+
+  const sorted = [...values].sort((a, b) => a - b);
+  const index = Math.ceil(sorted.length * 0.95) - 1;
+  return sorted[Math.max(0, Math.min(index, sorted.length - 1))];
+}
+
+function computeMeasuredKpi(
+  events: TelemetryEvent[],
+  featureId: string,
+  serviceId: number
+): ServiceMeasuredKpi {
+  const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+
+  const scoped = events.filter((event) => {
+    if (event.serviceId !== serviceId) {
+      return false;
+    }
+
+    if (event.payload.featureId !== featureId) {
+      return false;
+    }
+
+    const occurredAt = new Date(event.occurredAt).getTime();
+    return Number.isFinite(occurredAt) && occurredAt >= sevenDaysAgo;
+  });
+
+  const sessions = new Set<string>();
+  const latencies: number[] = [];
+
+  let succeeded = 0;
+  let failed = 0;
+  let actionsCompleted = 0;
+
+  scoped.forEach((event) => {
+    const sessionId = event.payload.sessionId;
+    if (sessionId) {
+      sessions.add(String(sessionId));
+    }
+
+    if (event.eventId === 'service_data_load_succeeded') {
+      succeeded += 1;
+      latencies.push(asNumber(event.payload.latencyMs));
+    }
+
+    if (event.eventId === 'service_data_load_failed') {
+      failed += 1;
+    }
+
+    if (event.eventId === 'service_action_completed') {
+      actionsCompleted += 1;
+    }
+  });
+
+  const requests = succeeded + failed;
+  const successRatePercent = requests > 0 ? (succeeded / requests) * 100 : 0;
+
+  return {
+    featureId,
+    serviceId,
+    uniqueSessions7d: sessions.size,
+    actionsCompleted7d: actionsCompleted,
+    successRatePercent: Number(successRatePercent.toFixed(2)),
+    p95LatencyMs: Number(percentile95(latencies).toFixed(2)),
+  };
+}
 
 function createDefaultSpecs(): FeatureOutcomeSpec[] {
   return [
@@ -222,6 +311,7 @@ export default function RoiPortfolioScreen() {
   const attribution = sdk.getAttributionReport();
   const experimentPlans = sdk.listExperimentPlans();
   const governanceRecords = sdk.getGovernanceRecords();
+  const queuedEvents = sdk.getQueuedEvents();
   const experimentAttribution = specs
     .map((spec) => {
       const firstKpi = spec.kpis[0];
@@ -307,6 +397,23 @@ export default function RoiPortfolioScreen() {
   }));
   const anomalyReport = detectThreeSigmaAnomalies(kpiSeries);
 
+  const measuredHeroKpis = React.useMemo(() => {
+    return HERO_FEATURES.map((feature) => ({
+      ...feature,
+      metrics: computeMeasuredKpi(queuedEvents, feature.featureId, feature.serviceId),
+      dashboard: sdk.computeRoiDashboard(
+        {
+          developmentCost: 180000,
+          infrastructureCost: 30000,
+          supportCost: 20000,
+          maintenanceCost: 20000,
+        },
+        feature.serviceId,
+        10000
+      ),
+    }));
+  }, [queuedEvents, sdk]);
+
   return (
     <div className="roi-screen">
       <h1>ROI Portfolio Dashboard</h1>
@@ -349,6 +456,37 @@ export default function RoiPortfolioScreen() {
           <p>{sdk.queueSize}</p>
           <small>{sdk.isOnline ? 'Online' : 'Offline'}</small>
         </article>
+      </section>
+
+      <section className="table-wrap">
+        <h2>Measured KPI & ROI (Last 7 Days)</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Service</th>
+              <th>Unique Sessions</th>
+              <th>Actions Completed</th>
+              <th>Success Rate %</th>
+              <th>P95 Latency (ms)</th>
+              <th>Measured ROI %</th>
+            </tr>
+          </thead>
+          <tbody>
+            {measuredHeroKpis.map((row) => (
+              <tr key={row.featureId}>
+                <td>{row.label}</td>
+                <td>{row.metrics.uniqueSessions7d}</td>
+                <td>{row.metrics.actionsCompleted7d}</td>
+                <td>{row.metrics.successRatePercent.toFixed(2)}</td>
+                <td>{row.metrics.p95LatencyMs.toFixed(2)}</td>
+                <td>{row.dashboard.roiPercent.toFixed(2)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p style={{ marginTop: '10px', fontSize: '14px' }}>
+          ROI is computed from emitted telemetry values (incrementalRevenue, costSaved, timeSavedHours, valuePerHour) and service cost model assumptions.
+        </p>
       </section>
 
       <section className="impact-nudge-grid">

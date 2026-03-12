@@ -1,0 +1,454 @@
+/* Feature ROI Dashboard Styles */
+
+.roi-dashboard {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f1729 0%, #1a2847 50%, #0f1729 100%);
+  color: #e6edf7;
+  padding: 24px;
+}
+
+.roi-header {
+  margin-bottom: 32px;
+  border-bottom: 1px solid rgba(78, 120, 184, 0.3);
+  padding-bottom: 24px;
+}
+
+.roi-header-title h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  color: #7ad8ff;
+}
+
+.roi-subtitle {
+  font-size: 0.95rem;
+  color: #8fb0d6;
+  margin: 0;
+}
+
+.roi-header-controls {
+  display: flex;
+  gap: 16px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+.control-group label {
+  font-weight: 600;
+  color: #b5cae0;
+}
+
+.control-group select,
+.control-group input {
+  background: rgba(17, 27, 48, 0.8);
+  border: 1px solid rgba(120, 168, 240, 0.5);
+  border-radius: 6px;
+  padding: 6px 10px;
+  color: #e6edf7;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.control-group select:hover,
+.control-group input:hover {
+  border-color: rgba(120, 168, 240, 0.8);
+}
+
+.control-checkbox {
+  margin-top: 8px;
+}
+
+.control-checkbox label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.control-checkbox input[type='checkbox'] {
+  cursor: pointer;
+}
+
+/* Executive KPIs */
+.executive-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.kpi-card {
+  background: rgba(17, 27, 48, 0.6);
+  border: 1px solid rgba(122, 216, 255, 0.4);
+  border-radius: 12px;
+  padding: 20px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 20px rgba(5, 10, 18, 0.3);
+  transition: all 0.3s ease;
+}
+
+.kpi-card:hover {
+  border-color: rgba(122, 216, 255, 0.7);
+  background: rgba(17, 27, 48, 0.8);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(122, 216, 255, 0.15);
+}
+
+.kpi-card-label {
+  font-size: 0.85rem;
+  color: #8fb0d6;
+  font-weight: 600;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.kpi-card-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #7ad8ff;
+  margin-bottom: 6px;
+}
+
+.kpi-card-context,
+.kpi-card-unit {
+  font-size: 0.8rem;
+  color: #9bb4d6;
+  font-weight: 400;
+}
+
+/* Portfolio Section */
+.portfolio-section {
+  margin-bottom: 32px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid rgba(122, 216, 255, 0.3);
+}
+
+.section-header h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  color: #7ad8ff;
+}
+
+.section-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 0.9rem;
+  color: #8fb0d6;
+}
+
+.feature-count,
+.ready-count {
+  background: rgba(122, 216, 255, 0.1);
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(122, 216, 255, 0.3);
+}
+
+/* Table */
+.table-container {
+  background: rgba(17, 27, 48, 0.5);
+  border: 1px solid rgba(122, 216, 255, 0.3);
+  border-radius: 12px;
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+}
+
+.portfolio-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.portfolio-table thead {
+  background: rgba(25, 39, 66, 0.8);
+  border-bottom: 2px solid rgba(122, 216, 255, 0.4);
+}
+
+.portfolio-table th {
+  padding: 14px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #b5cae0;
+  border-right: 1px solid rgba(122, 216, 255, 0.2);
+}
+
+.portfolio-table th:last-child {
+  border-right: none;
+}
+
+.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s;
+}
+
+.sortable:hover {
+  background: rgba(122, 216, 255, 0.1);
+}
+
+.portfolio-row {
+  border-bottom: 1px solid rgba(122, 216, 255, 0.1);
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.portfolio-row:hover {
+  background: rgba(122, 216, 255, 0.08);
+  border-bottom-color: rgba(122, 216, 255, 0.2);
+}
+
+.portfolio-table td {
+  padding: 12px;
+  border-right: 1px solid rgba(122, 216, 255, 0.1);
+}
+
+.portfolio-table td:last-child {
+  border-right: none;
+}
+
+.feature-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: #7ad8ff;
+}
+
+.feature-name-text {
+  flex: 1;
+}
+
+.feature-version {
+  font-size: 0.75rem;
+  background: rgba(122, 216, 255, 0.15);
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: #8fb0d6;
+  font-weight: 400;
+}
+
+.status-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-badge {
+  font-size: 0.9rem;
+}
+
+.status-label {
+  font-size: 0.85rem;
+  color: #8fb0d6;
+  white-space: nowrap;
+}
+
+.adoption-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.adoption-label {
+  font-size: 0.75rem;
+  color: #8fb0d6;
+}
+
+.kpi-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.kpi-name {
+  font-weight: 600;
+  color: #e6edf7;
+  font-size: 0.9rem;
+}
+
+.kpi-value {
+  font-size: 0.85rem;
+  color: #8fb0d6;
+}
+
+.roi-cell {
+  text-align: center;
+}
+
+.roi-percentage {
+  font-weight: 700;
+  font-size: 1rem;
+  border-radius: 6px;
+  padding: 4px 8px;
+  display: inline-block;
+}
+
+.roi-percentage.positive {
+  color: #53f0a1;
+  background: rgba(83, 240, 161, 0.1);
+}
+
+.roi-percentage.neutral {
+  color: #ffd17a;
+  background: rgba(255, 209, 122, 0.1);
+}
+
+.confidence-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.confidence-high {
+  background: rgba(83, 240, 161, 0.15);
+  color: #53f0a1;
+  border: 1px solid rgba(83, 240, 161, 0.3);
+}
+
+.confidence-med {
+  background: rgba(255, 209, 122, 0.15);
+  color: #ffd17a;
+  border: 1px solid rgba(255, 209, 122, 0.3);
+}
+
+.confidence-low {
+  background: rgba(255, 107, 107, 0.15);
+  color: #ff6b6b;
+  border: 1px solid rgba(255, 107, 107, 0.3);
+}
+
+.timestamp-cell {
+  color: #8fb0d6;
+  font-size: 0.85rem;
+}
+
+/* Governance Panel */
+.governance-panel {
+  background: rgba(17, 27, 48, 0.5);
+  border: 1px solid rgba(122, 216, 255, 0.3);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 32px;
+  backdrop-filter: blur(12px);
+}
+
+.governance-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.governance-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(25, 39, 66, 0.5);
+  border-left: 3px solid rgba(83, 240, 161, 0.6);
+  font-size: 0.95rem;
+  color: #e6edf7;
+}
+
+.governance-item.pending {
+  border-left-color: rgba(255, 209, 122, 0.6);
+  background: rgba(255, 209, 122, 0.05);
+}
+
+.checkpoint-label {
+  font-weight: 500;
+}
+
+.checkpoint-details {
+  margin-left: auto;
+  font-size: 0.85rem;
+  color: #8fb0d6;
+}
+
+/* Info Box */
+.info-box {
+  background: rgba(25, 39, 66, 0.6);
+  border: 1px solid rgba(122, 216, 255, 0.3);
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 32px;
+  font-size: 0.9rem;
+}
+
+.info-box strong {
+  color: #7ad8ff;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.info-box ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.info-box li {
+  color: #8fb0d6;
+  padding-left: 24px;
+  position: relative;
+}
+
+.info-box li:before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: #7ad8ff;
+  font-weight: bold;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .roi-header-controls {
+    flex-direction: column;
+  }
+
+  .control-group {
+    width: 100%;
+  }
+
+  .portfolio-table {
+    font-size: 0.8rem;
+  }
+
+  .portfolio-table th,
+  .portfolio-table td {
+    padding: 8px;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .section-meta {
+    width: 100%;
+  }
+}

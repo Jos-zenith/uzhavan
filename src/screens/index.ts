@@ -12,4 +12,11 @@ export { AtmaTrainingRegistrationScreen } from './AtmaTrainingRegistrationScreen
 export { UzhavanEMarketScreen } from './UzhavanEMarketScreen';
 export { MyFarmGuideScreen } from './MyFarmGuideScreen';
 
+// Feature ROI Console Screens
+export { FeatureRoiDashboard } from './FeatureRoiDashboard';
+export { FeatureDetailScreen } from './FeatureDetailScreen';
+export { TelemetryLiveViewScreen } from './TelemetryLiveViewScreen';
+export { KpiCatalogScreen } from './KpiCatalogScreen';
+export { CreateFeatureSpecWizard } from './CreateFeatureSpecWizard';
+
 export * from './services';

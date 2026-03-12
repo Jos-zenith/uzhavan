@@ -10,4 +10,5 @@ export * from './governance';
 export * from './process';
 export * from './attribution';
 export * from './experimentation';
+export * from './serviceTelemetryCatalog';
 export * from './provider';

@@ -21,6 +21,7 @@ import {
   type ConnectivityState,
 } from './connectivity';
 import { computePredictiveRoi } from './roiEngine';
+import { useTelemetryGovernance } from './sdkHooks/useTelemetryGovernance';
 import {
   AdminPanelScreen,
   AtmaTrainingRegistrationScreen,
@@ -35,6 +36,7 @@ import {
   UzhavanEMarketScreen,
   WeatherForecastScreen,
 } from './screens';
+import { RoiConsole } from './components/RoiConsole';
 
 const BENEFIT_REGISTRATION_SERVICE_ID = 2;
 const BENEFIT_DRAFT_KEY = 'benefit_registration';
@@ -78,6 +80,7 @@ type AppView =
   | 'serviceScreens'
   | 'sync'
   | 'roi'
+  | 'roi-console'
   | 'admin'
   | 'developer';
 
@@ -102,6 +105,9 @@ function App() {
     EMPTY_SYNC_SNAPSHOT
   );
   const [syncMessage, setSyncMessage] = React.useState('');
+
+  // Initialize telemetry governance specs and policies at app startup
+  useTelemetryGovernance();
 
   const refreshDraftAnalytics = React.useCallback(async () => {
     const analytics = await getDraftAbandonmentAnalytics(
@@ -412,6 +418,12 @@ function App() {
             onClick={() => setActiveView('roi')}
           >
             ROI & Governance
+          </button>
+          <button
+            className={activeView === 'roi-console' ? 'nav-btn active' : 'nav-btn'}
+            onClick={() => setActiveView('roi-console')}
+          >
+            🚀 ROI Console (NEW)
           </button>
           <button
             className={activeView === 'admin' ? 'nav-btn active' : 'nav-btn'}
@@ -730,6 +742,8 @@ function App() {
             <RoiPortfolioScreen />
           </section>
         )}
+
+        {activeView === 'roi-console' && <RoiConsole />}
 
         {activeView === 'sync' && (
           <section className="panel">

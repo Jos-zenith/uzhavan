@@ -1,5 +1,6 @@
 import { OfflineEventQueue } from './queue';
 import { PolicyRegistryClient } from './policy';
+import { readJson, writeJson } from './storage';
 import type {
   TelemetryConfig,
   TelemetryEvent,
@@ -26,6 +27,8 @@ export class TelemetryClient {
   private readonly config: Required<TelemetryConfig>;
   private readonly queue: OfflineEventQueue;
   private readonly policyRegistry: PolicyRegistryClient;
+  private readonly historyStorageKey: string;
+  private readonly historyLimit: number;
   private transport: TelemetryTransport;
   private flushTimer: number | null = null;
   private online = true;
@@ -34,6 +37,8 @@ export class TelemetryClient {
     this.config = { ...DEFAULT_CONFIG, ...(config ?? {}) };
     this.queue = new OfflineEventQueue(this.config.storageKey, this.config.maxQueueSize);
     this.policyRegistry = new PolicyRegistryClient();
+    this.historyStorageKey = `${this.config.storageKey}.history`;
+    this.historyLimit = Math.max(this.config.maxQueueSize * 20, this.config.maxQueueSize);
     this.transport = transport ?? defaultTransport;
 
     if (typeof window !== 'undefined') {
@@ -62,6 +67,20 @@ export class TelemetryClient {
 
   queueSize(): number {
     return this.queue.snapshot().size;
+  }
+
+  private readHistory(): TelemetryEvent[] {
+    return readJson<TelemetryEvent[]>(this.historyStorageKey, []);
+  }
+
+  private writeHistory(events: TelemetryEvent[]): void {
+    writeJson(this.historyStorageKey, events.slice(-this.historyLimit));
+  }
+
+  private appendHistory(event: TelemetryEvent): void {
+    const events = this.readHistory();
+    events.push(event);
+    this.writeHistory(events);
   }
 
   /**
@@ -101,6 +120,7 @@ export class TelemetryClient {
       policyId, // Link event to its policy
     };
 
+    this.appendHistory(event);
     this.queue.enqueue(event);
     return event;
   }
@@ -124,6 +144,7 @@ export class TelemetryClient {
       // Note: no policyId for feature events
     };
 
+    this.appendHistory(event);
     this.queue.enqueue(event);
     return event;
   }
@@ -171,6 +192,10 @@ export class TelemetryClient {
 
   getQueuedEvents(): TelemetryEvent[] {
     return this.queue.all();
+  }
+
+  getTrackedEvents(): TelemetryEvent[] {
+    return this.readHistory();
   }
 
   destroy(): void {

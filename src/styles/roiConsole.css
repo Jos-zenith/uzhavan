@@ -1,0 +1,46 @@
+/* ROI Console Layout */
+
+.roi-console {
+  display: flex;
+  height: 100vh;
+  background: linear-gradient(135deg, #0f1729 0%, #1a2847 50%, #0f1729 100%);
+  overflow: hidden;
+}
+
+.roi-console-content {
+  flex: 1;
+  overflow-y: auto;
+  margin-left: 220px;
+  background: linear-gradient(135deg, #0f1729 0%, #1a2847 50%, #0f1729 100%);
+}
+
+/* Scrollbar styling */
+.roi-console-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.roi-console-content::-webkit-scrollbar-track {
+  background: rgba(17, 27, 48, 0.5);
+}
+
+.roi-console-content::-webkit-scrollbar-thumb {
+  background: rgba(122, 216, 255, 0.3);
+  border-radius: 4px;
+}
+
+.roi-console-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(122, 216, 255, 0.5);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .roi-console-content {
+    margin-left: 180px;
+  }
+}
+
+@media (max-width: 480px) {
+  .roi-console-content {
+    margin-left: 60px;
+  }
+}

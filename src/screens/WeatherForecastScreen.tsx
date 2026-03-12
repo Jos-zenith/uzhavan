@@ -2,6 +2,7 @@ import React from 'react';
 import { weatherService, type WeatherResponse, type FarmingAdvisory } from '../weatherService';
 import { useOfflineAgriSdk } from '../sdk/provider';
 import { BUSINESS_POLICIES } from '../sdk/policy';
+import { useServiceTelemetry } from '../sdkHooks/useServiceTelemetry';
 
 export type UseWeatherResult = {
   weather: WeatherResponse | null;
@@ -22,6 +23,12 @@ export function useWeather(initialDistrict?: string): UseWeatherResult {
   const [error, setError] = React.useState<string | null>(null);
   const [currentDistrict, setCurrentDistrict] = React.useState(initialDistrict);
   const sdk = useOfflineAgriSdk();
+  const telemetry = useServiceTelemetry({
+    featureId: 'WEATHER_FORECAST',
+    serviceId: 8,
+    policyId: BUSINESS_POLICIES.POL_WEATHER_ADVISORY,
+    baseContext: { module: 'weather_screen' },
+  });
 
   const fetchWeather = React.useCallback(async (district: string) => {
     setLoading(true);
@@ -29,7 +36,16 @@ export function useWeather(initialDistrict?: string): UseWeatherResult {
     setCurrentDistrict(district);
 
     try {
-      const data = await weatherService.fetchWeatherByDistrict(district);
+      const data = await telemetry.trackDataLoad(
+        () => weatherService.fetchWeatherByDistrict(district),
+        {
+          operation: 'fetch_weather_forecast',
+          context: { district },
+          successPayload: (result) => ({
+            records: result.forecast.length,
+          }),
+        }
+      );
       setWeather(data);
 
       // Track weather fetch with SDK telemetry
@@ -39,6 +55,7 @@ export function useWeather(initialDistrict?: string): UseWeatherResult {
           'WEATHER_FORECAST_FETCHED',
           {
             district,
+            forecastDays: data.forecast.length,
             temperature: data.current.temperature,
             humidity: data.current.humidity,
             rainfall: data.current.rainfall || 0,
@@ -46,6 +63,16 @@ export function useWeather(initialDistrict?: string): UseWeatherResult {
           },
           8
         );
+
+        telemetry.trackActionCompleted('weather_forecast_loaded', {
+          district,
+          records: data.forecast.length,
+          timeSavedMinutes: 12,
+          timeSavedHours: 0.2,
+          valuePerHour: 180,
+          costSaved: 60,
+          incrementalRevenue: 140,
+        });
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch weather';

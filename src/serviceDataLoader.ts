@@ -1,15 +1,71 @@
 const serviceDataCache = new Map<string, Promise<unknown>>();
 
+export type ServiceDataTelemetryTracker = {
+  onLoadStarted?: (path: string) => void;
+  onLoadSucceeded?: (path: string, latencyMs: number, records: number) => void;
+  onLoadFailed?: (path: string, latencyMs: number, errorCode: string) => void;
+};
+
+let serviceDataTelemetryTracker: ServiceDataTelemetryTracker | null = null;
+
+export function setServiceDataTelemetryTracker(
+  tracker: ServiceDataTelemetryTracker | null
+): void {
+  serviceDataTelemetryTracker = tracker;
+}
+
+function inferRecordsCount(payload: unknown): number {
+  if (Array.isArray(payload)) {
+    return payload.length;
+  }
+
+  if (!payload || typeof payload !== 'object') {
+    return 1;
+  }
+
+  const record = payload as Record<string, unknown>;
+
+  for (const value of Object.values(record)) {
+    if (Array.isArray(value)) {
+      return value.length;
+    }
+  }
+
+  return 1;
+}
+
 async function fetchJson<T>(path: string): Promise<T> {
   if (!serviceDataCache.has(path)) {
+    const start = performance.now();
+    serviceDataTelemetryTracker?.onLoadStarted?.(path);
+
     serviceDataCache.set(
       path,
-      fetch(path).then(async (response) => {
-        if (!response.ok) {
-          throw new Error(`Failed to load ${path}: ${response.status}`);
-        }
-        return response.json();
-      })
+      fetch(path)
+        .then(async (response) => {
+          if (!response.ok) {
+            throw new Error(`Failed to load ${path}: ${response.status}`);
+          }
+
+          const json = await response.json();
+          const latencyMs = Math.round(performance.now() - start);
+          serviceDataTelemetryTracker?.onLoadSucceeded?.(
+            path,
+            latencyMs,
+            inferRecordsCount(json)
+          );
+          return json;
+        })
+        .catch((error) => {
+          const latencyMs = Math.round(performance.now() - start);
+          serviceDataTelemetryTracker?.onLoadFailed?.(
+            path,
+            latencyMs,
+            error instanceof Error ? error.message : 'unknown_error'
+          );
+          serviceDataCache.delete(path);
+          throw error;
+        })
     );
   }
 

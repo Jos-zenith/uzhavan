@@ -30,6 +30,7 @@ import type {
   ReleaseReadinessResult,
   RoiCostModel,
   RoiMetric,
+  TelemetryEvent,
   TelemetryConfig,
   TelemetryPayload,
   TelemetryTransport,
@@ -40,6 +41,8 @@ type SdkContextValue = {
   ready: boolean;
   isOnline: boolean;
   queueSize: number;
+  getQueuedEvents: () => TelemetryEvent[];
+  getTrackedEvents: () => TelemetryEvent[];
   /** POLICY-ENFORCED: track(policyId, eventId, payload, serviceId) */
   track: (policyId: BusinessPolicyId, eventId: string, payload: TelemetryPayload, serviceId?: number) => void;
   flush: () => Promise<void>;
@@ -164,6 +167,8 @@ export function OfflineAgriSdkProvider({
       ready: true,
       isOnline: online,
       queueSize,
+      getQueuedEvents: () => telemetry.getQueuedEvents(),
+      getTrackedEvents: () => telemetry.getTrackedEvents(),
       track: (policyId, eventId, payload, serviceId) => {
         telemetry.track(policyId, eventId, payload, serviceId);
         setQueueSize(telemetry.queueSize());
@@ -180,14 +185,14 @@ export function OfflineAgriSdkProvider({
       },
       computeRoi: (baselineCost?: number, serviceId?: number) => {
         return roi.compute({
-          events: telemetry.getQueuedEvents(),
+          events: telemetry.getTrackedEvents(),
           baselineCost,
           serviceId,
         });
       },
       computeRoiDashboard: (costs, serviceId, eligibleUsers) => {
         return roi.computeFeatureDashboard({
-          events: telemetry.getQueuedEvents(),
+          events: telemetry.getTrackedEvents(),
           costs,
           serviceId,
           eligibleUsers,
@@ -196,7 +201,7 @@ export function OfflineAgriSdkProvider({
       computePortfolioRoiDashboard: (entries) => {
         return roi.computePortfolioDashboard(
           entries.map((entry) => ({
-            events: telemetry.getQueuedEvents(),
+            events: telemetry.getTrackedEvents(),
             costs: entry.costs,
             serviceId: entry.serviceId,
             eligibleUsers: entry.eligibleUsers,
@@ -205,7 +210,7 @@ export function OfflineAgriSdkProvider({
       },
       evaluateReleaseReadiness: (spec, approval) => {
         const observedEventIds = telemetry
-          .getQueuedEvents()
+          .getTrackedEvents()
           .map((event) => event.eventId);
         return evaluateReleaseReadiness(spec, approval, observedEventIds);
       },
@@ -220,7 +225,7 @@ export function OfflineAgriSdkProvider({
       },
       evaluateFeatureReadiness: (featureId) => {
         const observedEventIds = telemetry
-          .getQueuedEvents()
+          .getTrackedEvents()
           .map((event) => event.eventId);
         return governance.evaluateFeatureReadiness(featureId, observedEventIds);
       },
@@ -310,7 +315,7 @@ export function OfflineAgriSdkProvider({
       getAttributionReport: () => {
         return buildFeatureAttributionReport(
           featureRegistry.list(),
-          telemetry.getQueuedEvents()
+          telemetry.getTrackedEvents()
         );
       },
       registerExperimentPlan: (plan) => {
@@ -337,7 +342,7 @@ export function OfflineAgriSdkProvider({
           },
           kpiId,
           metricEventId,
-          events: telemetry.getQueuedEvents(),
+          events: telemetry.getTrackedEvents(),
         });
       },
     };

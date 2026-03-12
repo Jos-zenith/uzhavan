@@ -11,6 +11,7 @@ import {
   SellingRecommendation,
 } from '../../marketPriceService';
 import { useVictori, BUSINESS_POLICIES } from '../../victoriSdk';
+import { useServiceTelemetry } from '../../sdkHooks/useServiceTelemetry';
 
 export type UseMarketPriceReturn = {
   prices: MarketPriceResponse | null;
@@ -37,6 +38,12 @@ export function useMarketPrice(
   const [error, setError] = useState<string | null>(null);
 
   const { track } = useVictori();
+  const telemetry = useServiceTelemetry({
+    featureId: 'MARKET_PRICE',
+    serviceId: 7,
+    policyId: BUSINESS_POLICIES.POL_MARKET_PRICING,
+    baseContext: { module: 'market_price_screen' },
+  });
 
   const fetchPrices = useCallback(
     async (market: string, commodity?: string) => {
@@ -44,7 +51,20 @@ export function useMarketPrice(
       setError(null);
 
       try {
-        const response = await marketPriceService.fetchPrices(market, commodity);
+        const response = await telemetry.trackDataLoad(
+          () => marketPriceService.fetchPrices(market, commodity),
+          {
+            operation: 'fetch_market_prices',
+            context: {
+              market,
+              commodity: commodity || 'all',
+            },
+            successPayload: (result) => ({
+              district: result.market.district,
+              records: result.prices.length,
+            }),
+          }
+        );
         setPrices(response);
 
         const comp = marketPriceService.comparePrices(response);
@@ -62,6 +82,17 @@ export function useMarketPrice(
             district: response.market.district,
             queryCount: response.prices.length,
           },
+        });
+
+        telemetry.trackActionCompleted('price_lookup_completed', {
+          district: response.market.district,
+          commodity: commodity || 'all',
+          records: response.prices.length,
+          timeSavedMinutes: 18,
+          timeSavedHours: 0.3,
+          valuePerHour: 180,
+          costSaved: 140,
+          incrementalRevenue: 220,
         });
       } catch (err: any) {
         setError(err?.message || 'Failed to fetch market prices');

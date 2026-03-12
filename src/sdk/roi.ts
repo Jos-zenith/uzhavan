@@ -128,9 +128,12 @@ export class RoiEngine {
       sumBy(events, 'outputGainValue');
 
     const timeSavedHours = sumBy(events, 'timeSavedHours');
+    const timeSavedMinutes = sumBy(events, 'timeSavedMinutes');
     const explicitTimeSavedValue = sumBy(events, 'timeSavedValue');
     const hourlyValue = this.detectAverageHourlyValue(events);
-    const timeSavedValue = explicitTimeSavedValue + timeSavedHours * hourlyValue;
+    const timeSavedValue =
+      explicitTimeSavedValue +
+      (timeSavedHours + timeSavedMinutes / 60) * hourlyValue;
 
     const qualitativeBenefitValue =
       sumBy(events, 'qualitativeBenefitValue') +

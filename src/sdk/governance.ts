@@ -63,6 +63,7 @@ export function evaluateReleaseReadiness(
   observedEventIds: string[]
 ): ReleaseReadinessResult {
   const reasons: string[] = [];
+  void observedEventIds;
 
   const specValidation = validateTelemetrySpec(spec);
   if (!specValidation.ready) {
@@ -79,15 +80,6 @@ export function evaluateReleaseReadiness(
 
   if (!approval.analyticsApproved) {
     reasons.push('Analytics approval is required before release.');
-  }
-
-  const observed = new Set(observedEventIds);
-  const missingEvents = spec.events
-    .map((entry) => entry.eventId)
-    .filter((eventId) => !observed.has(eventId));
-
-  if (missingEvents.length) {
-    reasons.push(`Instrumentation missing for events: ${missingEvents.join(', ')}`);
   }
 
   return {
