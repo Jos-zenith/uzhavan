@@ -400,3 +400,275 @@ Suggested build stack (non-web3):
 - Dataset TTL cache: complete.
 - ROI dashboard and governance model: complete.
 - Single unified documentation file: complete.
+
+---
+
+## 13) Repo-Attached Feature Measurement Map (Top 10)
+
+This section links the ROI design directly to the TypeScript codebase and defines where instrumentation must exist.
+
+### 13.1 Concrete repo artifacts (current)
+- Shared telemetry SDK wrapper:
+  - `src/sdk/telemetry.ts`
+  - `src/sdk/provider.tsx`
+  - `src/sdk/httpTransport.ts`
+  - `src/sdkHooks/useServiceTelemetry.ts`
+- Single event and telemetry type source:
+  - `src/sdk/types.ts`
+  - `src/sdk/serviceTelemetryCatalog.ts` (`STANDARD_SERVICE_EVENT_SCHEMAS`)
+- Feature-level instrumentation points already active:
+  - `src/screens/WeatherForecastScreen.tsx`
+  - `src/screens/services/MarketPriceScreen.tsx`
+- Feature-level instrumentation points to complete next:
+  - `src/screens/services/BenefitRegistrationScreen.tsx`
+  - `src/screens/services/InsurancePremiumCalculator.tsx`
+  - `src/screens/services/FertilizerStockScreen.tsx`
+  - `src/screens/services/SeedStockScreen.tsx`
+  - `src/screens/services/MachineryHiringScreen.tsx`
+  - `src/screens/services/ReservoirLevelsScreen.tsx`
+  - `src/screens/OfficerContactInfoScreen.tsx`
+
+### 13.2 Top 10 features: journeys, events, KPIs
+
+All features should emit the standard lifecycle events:
+- `service_opened`
+- `service_data_load_started`
+- `service_data_load_succeeded`
+- `service_data_load_failed`
+- `service_action_completed`
+
+| Feature (serviceId) | Key user journeys | Events to emit (name + key properties) | KPI(s) computed from events |
+|---|---|---|---|
+| Subsidy Schemes Info (1) | Open service, fetch schemes, view eligibility | `service_opened` (`featureId`, `sessionId`, `district`), `service_data_load_succeeded` (`operation=fetch_schemes`, `latencyMs`, `records`), `service_action_completed` (`actionName=scheme_viewed`, `timeSavedMinutes`) | Adoption rate, p95 load latency, time-on-task (proxy via `timeSavedMinutes`) |
+| Benefit Registration (2) | Open form, validate form, submit registration | `service_data_load_succeeded` (`operation=load_benefit_form`), `service_action_completed` (`actionName=registration_submitted`, `beneficiaryCount`, `timeSavedMinutes`, `costSaved`) | Registration completion rate, subsidy cycle-time reduction, cost saved per registration |
+| Crop Insurance (3) | Open premium calculator, calculate premium, start enrollment | `service_data_load_succeeded` (`operation=load_insurance_products`), `service_action_completed` (`actionName=premium_calculated`, `cropType`, `sumInsured`) | Insurance intent conversion, quote success rate, support ticket reduction |
+| Fertilizer Stock (4) | Load district stock, search fertilizer, refresh inventory | `service_data_load_succeeded` (`operation=load_fertilizer_stock`, `district`, `records`), `service_action_completed` (`actionName=stock_query_completed`, `fertilizerType`, `timeSavedMinutes`, `costSaved`) | Stock lookup success, input cost savings, stock-out avoidance proxy |
+| Seed Stock (5) | Load seed catalog, filter by district, check availability | `service_data_load_succeeded` (`operation=load_seed_stock`, `district`, `records`), `service_action_completed` (`actionName=seed_selection_completed`, `variety`, `costSaved`) | Seed discovery completion rate, input optimization ratio, adoption rate |
+| Machinery Hiring (6) | Browse machines, estimate hours, submit rental intent | `service_data_load_succeeded` (`operation=load_machinery_options`), `service_action_completed` (`actionName=machinery_booking_intent`, `machineType`, `hoursUsed`, `costSaved`) | Rental intent conversion, capital efficiency gain, cost saved per session |
+| Daily Market Price (7) | Fetch prices, compare markets, decide selling plan | `service_data_load_succeeded` (`operation=fetch_market_prices`, `market`, `commodity`, `records`, `latencyMs`), `service_action_completed` (`actionName=price_lookup_completed`, `incrementalRevenue`, `timeSavedMinutes`) | Price-query completion, price realization delta proxy, incremental revenue |
+| Weather Forecast (8) | Select district, load forecast, apply advisory | `service_data_load_succeeded` (`operation=fetch_weather_forecast`, `district`, `records`, `latencyMs`), `service_action_completed` (`actionName=weather_forecast_loaded`, `costSaved`, `incrementalRevenue`, `timeSavedHours`) | Advisory adoption, weather fetch reliability, productivity/time-saved value |
+| Officer Contact Info (9) | Load officer list, find nearest officer, place call | `service_data_load_succeeded` (`operation=load_officer_contacts`, `district`, `records`), `service_action_completed` (`actionName=officer_contact_initiated`) | Service completion rate, issue-resolution lead indicator, time saved |
+| Reservoir Levels (10) | Load reservoir data, filter by basin, check irrigation risk | `service_data_load_succeeded` (`operation=load_reservoir_levels`, `district`, `records`), `service_action_completed` (`actionName=reservoir_risk_reviewed`, `riskLevel`) | Advisory reach, irrigation risk mitigation proxy, retention/revisit rate |
+
+Notes:
+- KPI formulas should use `computeMeasuredKpi()` and ROI dashboard outputs in `src/sdk/serviceTelemetryCatalog.ts` and `src/sdk/roi.ts`.
+- Event emission should be wired through `useServiceTelemetry` for all service screens to keep schema consistency.
+
+---
+
+## 14) Appendix A: Telemetry Contract v1
+
+This appendix defines the mandatory event contract for all feature telemetry.
+
+### 14.1 Event naming convention
+- Current standard events (already in production): snake_case, for example `service_data_load_succeeded`.
+- New feature-specific events: `<domain>_<action>_v1` (snake_case with explicit version), for example `market_transaction_posted_v1`.
+- Versioning rule:
+  - Backward-compatible metadata additions: keep same event name.
+  - Breaking payload changes: increment suffix (`_v2`).
+
+### 14.2 Required vs optional fields
+
+Required envelope fields (all events):
+- `eventId`
+- `occurredAt`
+- `featureId`
+- `serviceId`
+- `sessionId`
+- `userId` (anonymous ID only)
+- `timestamp`
+- `source`
+
+Required operation fields (for load and action events):
+- `operation` for `service_data_load_*`
+- `latencyMs` for `service_data_load_succeeded` and `service_data_load_failed`
+- `records` for `service_data_load_succeeded`
+- `errorCode` for `service_data_load_failed`
+- `actionName` for `service_action_completed`
+
+Optional context fields:
+- `district`
+- `commodity`
+- `market`
+- `module`
+- `cacheLayer`
+- `datasetPath`
+- `riskLevel`
+
+Optional value fields (ROI side):
+- `timeSavedMinutes`
+- `timeSavedHours`
+- `timeSavedValue`
+- `valuePerHour`
+- `costSaved` or `costSavings`
+- `incrementalRevenue` or `revenueGained`
+- `productivityValue`
+- `qualitativeBenefitValue`
+- `beneficiaryCount`
+
+### 14.3 PII policy
+
+Forbidden in telemetry payloads:
+- Aadhaar number
+- Bank account number
+- Phone number
+- Full name
+- Exact street address
+- Precise GPS coordinates (lat/lon)
+
+Allowed with transformation:
+- `userId`: anonymous generated ID only (`getOrCreateTelemetryAnonUserId()`)
+- Contact identifiers: one-way hash with salt if absolutely required for deduplication
+
+Allowed coarse context:
+- district/block/pincode prefix (no full address)
+- crop/commodity category
+- app version/release/channel
+
+### 14.4 Canonical JSON shape
+
+```json
+{
+  "id": "evt_1741862400000_ab12cd34",
+  "eventId": "service_action_completed",
+  "policyId": "POL_MARKET_PRICING",
+  "serviceId": 7,
+  "occurredAt": "2026-03-13T09:10:00.000Z",
+  "payload": {
+    "featureId": "MARKET_PRICE",
+    "sessionId": "session_1741860000_x1y2z3",
+    "userId": "anon_1741859000_u7v8w9",
+    "timestamp": "2026-03-13T09:10:00.000Z",
+    "source": "web",
+    "operation": "fetch_market_prices",
+    "district": "Thanjavur",
+    "commodity": "Paddy",
+    "actionName": "price_lookup_completed",
+    "records": 22,
+    "latencyMs": 418,
+    "timeSavedMinutes": 18,
+    "costSaved": 140,
+    "incrementalRevenue": 220
+  },
+  "retries": 0
+}
+```
+
+### 14.5 Example: feature-specific event
+
+```json
+{
+  "eventId": "market_transaction_posted_v1",
+  "serviceId": 18,
+  "payload": {
+    "featureId": "UZHAVAN_E_MARKET",
+    "sessionId": "session_1741860000_x1y2z3",
+    "userId": "anon_1741859000_u7v8w9",
+    "timestamp": "2026-03-13T09:15:00.000Z",
+    "source": "web",
+    "district": "Villupuram",
+    "commodity": "Tomato",
+    "quantityKg": 500,
+    "expectedPricePerKg": 26,
+    "transactionValue": 13000
+  }
+}
+```
+
+---
+
+## 15) Implementation Plan (2-Week Hackathon Version)
+
+### 15.1 Technology choice for this repo
+- App type: React web TypeScript app (not React Native).
+- Instrumentation path:
+  - Keep existing SDK event path (`useServiceTelemetry` -> `TelemetryClient` -> `HttpTelemetryTransport`).
+  - Add OTel-compatible backend ingestion pipeline without changing screen code shape.
+
+### 15.2 Pipeline architecture
+1. Frontend emits policy-enforced events via `src/sdk/telemetry.ts`.
+2. Events are batched by `src/sdk/queue.ts` and sent via `src/sdk/httpTransport.ts`.
+3. Ingestion endpoint (`REACT_APP_TELEMETRY_ENDPOINT`) receives `{ events: [...] }`.
+4. Endpoint maps business events to:
+   - OTel logs (event stream),
+   - derived OTel metrics (counters/histograms),
+   - warehouse fact table keyed by `featureId`, `serviceId`, `eventId`, and release.
+5. OTel Collector exports to observability backend and analytics store.
+
+Collector location (hackathon):
+- Run OTel Collector as a local Docker service during demo.
+- Optional cloud run: one small VM/container in the same VNet as analytics sink.
+
+### 15.3 Batching and offline queue approach
+- Keep existing queue defaults for MVP:
+  - `maxQueueSize=5000`
+  - `flushBatchSize=100`
+  - `flushIntervalMs=30000`
+  - `maxRetries=5`
+- On reconnect, flush in FIFO batches; if transport fails, retry and drop only after max retries.
+
+### 15.4 Sampling rules
+- Business outcome events (`service_action_completed`, `FEATURE_KPI_METRIC`): 100% sample.
+- Reliability events:
+  - failures (`service_data_load_failed`): 100% sample.
+  - successes (`service_data_load_succeeded`): 25% sample once volume exceeds threshold.
+- Debug/developer-only events: 0% in production.
+
+### 15.5 Two-week execution schedule
+- Days 1-2:
+  - Finalize Telemetry Contract v1.
+  - Register telemetry specs for 10 features.
+- Days 3-5:
+  - Complete instrumentation for top 10 service screens.
+  - Add policy validation checks for required fields.
+- Days 6-8:
+  - Stand up ingestion endpoint + OTel Collector + warehouse table.
+  - Validate replay behavior in offline/online transitions.
+- Days 9-11:
+  - Compute KPI jobs and ROI summary tables.
+  - Build dashboard views for feature-level ROI and portfolio view.
+- Days 12-14:
+  - Run attribution windows, generate evidence pack, and freeze demo.
+
+---
+
+## 16) MVP ROI Loop (Closed-Loop Demo Scope)
+
+For hackathon credibility, use a narrow loop with two features and three KPIs.
+
+### 16.1 Selected features
+- Money-like feature: `UZHAVAN_E_MARKET` (serviceId 18)
+- Cost-saving feature: `FERTILIZER_STOCK` (serviceId 4)
+- Optional third feature for risk reduction: `AI_PEST_IDENTIFICATION` (serviceId 16)
+
+### 16.2 MVP KPIs
+- KPI-1 (Revenue): Price realization delta per listing
+  - Formula: `avg(app_price_per_kg - mandi_price_per_kg)`
+  - Source events: `market_transaction_posted_v1`, `service_action_completed`
+- KPI-2 (Cost Saving): Input optimization savings per farmer
+  - Formula: `sum(costSaved) / unique_farmers`
+  - Source events: `service_action_completed` from fertilizer and pest flows
+- KPI-3 (Operational): Feature completion rate
+  - Formula: `completed_actions / opened_sessions`
+  - Source events: `service_opened`, `service_action_completed`
+
+### 16.3 Sample ROI output (single feature)
+
+Uzhavan e-Market monthly sample:
+- Incremental revenue: INR 420,000
+- Time-saved value: INR 36,000
+- Total measured benefits: INR 456,000
+- Total monthly feature costs: INR 190,000
+
+ROI calculation:
+
+`ROI % = ((456000 - 190000) / 190000) * 100 = 140%`
+
+### 16.4 MVP deliverables checklist
+- Instrumented events for selected features in production build.
+- KPI table generated from telemetry batches.
+- One dashboard showing:
+  - event volume and completion funnel,
+  - KPI trend (7d/30d),
+  - ROI card with assumptions.
+- One evidence page documenting attribution method and sample-size window.
