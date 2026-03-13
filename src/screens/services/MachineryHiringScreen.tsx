@@ -22,6 +22,7 @@ import {
   UsageStatistics,
 } from '../../machineryHiringService';
 import { victoriSdk } from '../../victoriSdk';
+import { trackTelemetry } from '../../telemetry/posthog';
 
 // ============================================================
 // CUSTOM HOOK
@@ -275,6 +276,11 @@ export default function MachineryHiringScreen() {
   useEffect(() => {
     void loadMachinery();
     void loadMechanics();
+    trackTelemetry('feature_opened', {
+      featureId: 'MACHINERY_HIRING',
+      serviceId: 6,
+      screen: 'MachineryHiringScreen',
+    });
   }, [loadMachinery, loadMechanics]);
 
   // Handle catalogue search

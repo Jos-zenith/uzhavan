@@ -4,6 +4,7 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { createHttpTelemetryTransport, OfflineAgriSdkProvider } from './sdk';
+import { initTelemetry } from './telemetry/posthog';
 
 const telemetryEndpoint = (process.env.REACT_APP_TELEMETRY_ENDPOINT || '').trim();
 const telemetryApiKey = (process.env.REACT_APP_TELEMETRY_API_KEY || '').trim();
@@ -13,6 +14,8 @@ const telemetryTransport = telemetryEndpoint
       apiKey: telemetryApiKey || undefined,
     })
   : undefined;
+
+initTelemetry();
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement

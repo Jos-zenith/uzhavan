@@ -11,6 +11,7 @@ import {
   detectThreeSigmaAnomalies,
   type TimeSeriesPoint,
 } from '../roiEngine';
+import { trackTelemetry } from '../telemetry/posthog';
 import '../styles/roiPortfolio.css';
 
 const DEFAULT_DEMO_MODE =
@@ -217,6 +218,13 @@ export default function RoiPortfolioScreen() {
   const sdk = useOfflineAgriSdk();
   const [ready, setReady] = React.useState(false);
   const [demoMode, setDemoMode] = React.useState(DEFAULT_DEMO_MODE);
+
+  React.useEffect(() => {
+    trackTelemetry('feature_opened', {
+      featureId: 'ROI_PORTFOLIO',
+      screen: 'RoiPortfolioScreen',
+    });
+  }, []);
   const initializedRef = React.useRef(false);
   const seededDemoRef = React.useRef(false);
 

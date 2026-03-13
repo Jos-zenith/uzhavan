@@ -1,3 +1,5 @@
+import { trackTelemetry } from './telemetry/posthog';
+
 export type RoiInputs = {
   yieldBase: number;
   deltaYieldAi: number;
@@ -252,6 +254,18 @@ export function computePredictiveRoi(
     baseline,
     adoptionStage
   );
+
+  trackTelemetry('roi_snapshot_viewed', {
+    district,
+    crop,
+    farmerDaysSinceOnboarding,
+    activeServiceCount: activeServiceIds.length,
+    activeServiceIds,
+    adoptionStage,
+    netProfit,
+    attributionScore: attribution.attributionScore,
+    riskMitigationScore: attribution.riskMitigationScore,
+  });
 
   return {
     netProfit,

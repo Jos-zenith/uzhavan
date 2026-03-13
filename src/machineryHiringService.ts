@@ -9,6 +9,7 @@
  */
 
 import { clearServiceDataCache, getService6Dataset } from './serviceDataLoader';
+import { trackTelemetry } from './telemetry/posthog';
 
 // ============================================================
 // TYPE DEFINITIONS
@@ -298,6 +299,13 @@ class MachineryHiringService {
     rentalDate: string,
     duration: number
   ): Promise<MachineryBooking> {
+    trackTelemetry('machinery_booking_started', {
+      district: farmerDetails.district,
+      machineryType,
+      duration,
+      rentalDate,
+    });
+
     // Find available machinery
     const available = await this.searchMachinery(
       farmerDetails.district,
@@ -339,6 +347,16 @@ class MachineryHiringService {
     const bookings = this.getBookingsFromStorage();
     bookings.push(booking);
     localStorage.setItem(this.bookingKey, JSON.stringify(bookings));
+
+    trackTelemetry('machinery_booking_confirmed', {
+      bookingId,
+      confirmationNumber,
+      district: farmerDetails.district,
+      machineryType,
+      duration,
+      totalCost,
+      status: booking.status,
+    });
 
     return booking;
   }

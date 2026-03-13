@@ -3,6 +3,8 @@
  * Integrates agricultural market price data with offline-first caching
  */
 
+import { trackTelemetry } from './telemetry/posthog';
+
 export type MarketPrice = {
   commodity: string;
   variety?: string;
@@ -192,6 +194,13 @@ class MarketPriceService {
     const cacheKey = `${market}_${commodity || 'all'}`.toLowerCase().replace(/\s+/g, '_');
     const cached = this.loadFromCache(cacheKey);
     if (cached) {
+      trackTelemetry('market_price_checked', {
+        market,
+        commodity: commodity || 'all',
+        district: cached.market.district,
+        recordCount: cached.prices.length,
+        source: 'cache',
+      });
       return cached;
     }
 
@@ -256,6 +265,14 @@ class MarketPriceService {
         fetchedAt: Date.now(),
         source: 'api',
       };
+
+      trackTelemetry('market_price_checked', {
+        market,
+        commodity: commodity || 'all',
+        district: marketInfo.district,
+        recordCount: prices.length,
+        source: 'api',
+      });
 
       this.saveToCache(cacheKey, result);
       return result;

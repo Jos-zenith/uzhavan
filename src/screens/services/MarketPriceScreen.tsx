@@ -12,6 +12,7 @@ import {
 } from '../../marketPriceService';
 import { useVictori, BUSINESS_POLICIES } from '../../victoriSdk';
 import { useServiceTelemetry } from '../../sdkHooks/useServiceTelemetry';
+import { trackTelemetry } from '../../telemetry/posthog';
 
 export type UseMarketPriceReturn = {
   prices: MarketPriceResponse | null;
@@ -103,7 +104,7 @@ export function useMarketPrice(
         setLoading(false);
       }
     },
-    [track]
+    [telemetry, track]
   );
 
   const fetchPricesByDistrict = useCallback(
@@ -147,6 +148,14 @@ export function MarketPriceScreen() {
 
   const markets = marketPriceService.getAllMarkets();
   const commodities = marketPriceService.getAllCommodities();
+
+  useEffect(() => {
+    trackTelemetry('feature_opened', {
+      featureId: 'MARKET_PRICE',
+      serviceId: 7,
+      screen: 'MarketPriceScreen',
+    });
+  }, []);
 
   const handleFetch = () => {
     if (selectedMarket) {
