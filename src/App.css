@@ -611,6 +611,313 @@ select:focus,
   color: #d3e2f5;
 }
 
+/* ── Uzhavan Service Screens layout ─────────────────────────────────── */
+.uzhavan-layout {
+  display: flex;
+  gap: 0;
+  padding: 0 !important;
+  min-height: 80vh;
+  overflow: hidden;
+}
+
+/* Sidebar */
+.uzhavan-sidebar {
+  width: 240px;
+  min-width: 200px;
+  max-width: 260px;
+  flex-shrink: 0;
+  background: rgba(6, 11, 22, 0.95);
+  border-right: 1px solid rgba(120, 168, 240, 0.18);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.uzhavan-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 14px 12px;
+  border-bottom: 1px solid rgba(120, 168, 240, 0.15);
+  flex-shrink: 0;
+}
+
+.uzhavan-sidebar-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #8aa7cc;
+}
+
+.uzhavan-sidebar-count {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(83, 160, 240, 0.2);
+  color: #93c5fd;
+}
+
+.uzhavan-service-list {
+  list-style: none;
+  margin: 0;
+  padding: 8px 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.uzhavan-service-list::-webkit-scrollbar {
+  width: 4px;
+}
+.uzhavan-service-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.uzhavan-service-list::-webkit-scrollbar-thumb {
+  background: rgba(120, 168, 240, 0.25);
+  border-radius: 4px;
+}
+
+.uzhavan-service-list li {
+  margin: 0;
+  padding: 0 8px;
+}
+
+.uzhavan-service-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #a8bdd6;
+  cursor: pointer;
+  text-align: left;
+  font-size: 0.84rem;
+  transition: background 0.15s, color 0.15s;
+  line-height: 1.35;
+}
+
+.uzhavan-service-item:hover {
+  background: rgba(120, 168, 240, 0.1);
+  color: #e2eeff;
+}
+
+.uzhavan-service-item.active {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+  font-weight: 600;
+}
+
+.uzhavan-service-num {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #4a7aaa;
+  min-width: 22px;
+  letter-spacing: 0.03em;
+}
+
+.uzhavan-service-item.active .uzhavan-service-num {
+  color: #60a5fa;
+}
+
+.uzhavan-service-name {
+  flex: 1;
+}
+
+/* Main panel */
+.uzhavan-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+/* Location bar */
+.uzhavan-location-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 12px 20px;
+  background: rgba(8, 14, 26, 0.9);
+  border-bottom: 1px solid rgba(120, 168, 240, 0.15);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.uzhavan-loc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 0.82rem;
+  color: #8aa7cc;
+  min-width: 160px;
+}
+
+.uzhavan-loc-field select {
+  min-width: 160px;
+}
+
+/* Service header */
+.uzhavan-service-header {
+  padding: 20px 24px 14px;
+  border-bottom: 1px solid rgba(120, 168, 240, 0.12);
+  flex-shrink: 0;
+}
+
+.uzhavan-service-header h2 {
+  margin: 0 0 8px;
+  font-size: 1.25rem;
+  color: #e9f2ff;
+}
+
+.uzhavan-meta-row {
+  font-size: 0.85rem;
+  color: #a0b8d4;
+  margin-bottom: 10px;
+  line-height: 1.55;
+}
+
+.uzhavan-meta-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.uzhavan-chip {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(30, 58, 90, 0.7);
+  border: 1px solid rgba(120, 168, 240, 0.2);
+  color: #93c5fd;
+  font-size: 0.75rem;
+}
+
+.uzhavan-chip--impact {
+  background: rgba(20, 70, 40, 0.7);
+  border-color: rgba(83, 240, 161, 0.2);
+  color: #86efac;
+}
+
+/* Screen body */
+.uzhavan-screen-body {
+  flex: 1;
+  padding: 20px 24px;
+  overflow-y: auto;
+}
+
+.uzhavan-coming-soon {
+  padding: 32px;
+  text-align: center;
+  color: #8aa7cc;
+  border: 1px dashed rgba(120, 168, 240, 0.25);
+  border-radius: 12px;
+  margin: 24px 0;
+}
+
+.uzhavan-coming-soon p {
+  font-size: 1rem;
+  margin-bottom: 16px;
+}
+
+.uzhavan-coming-soon ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+  display: inline-block;
+  font-size: 0.87rem;
+  line-height: 2;
+}
+
+/* Responsive: collapse sidebar on narrow viewports */
+@media (max-width: 680px) {
+  .uzhavan-layout {
+    flex-direction: column;
+  }
+  .uzhavan-sidebar {
+    width: 100%;
+    max-width: 100%;
+    max-height: 200px;
+    border-right: none;
+    border-bottom: 1px solid rgba(120, 168, 240, 0.18);
+  }
+  .uzhavan-service-list {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 6px 8px;
+  }
+  .uzhavan-service-list li {
+    padding: 0 2px;
+    flex-shrink: 0;
+  }
+  .uzhavan-service-item {
+    white-space: nowrap;
+  }
+}
+
+.file-preview-panel {
+  margin-bottom: 14px;
+  padding: 14px;
+  border: 1px solid rgba(120, 168, 240, 0.35);
+  border-radius: 12px;
+  background: rgba(8, 14, 24, 0.8);
+}
+
+.file-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.file-preview-header h3 {
+  margin: 0;
+}
+
+.file-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.file-preview-card {
+  border: 1px solid rgba(120, 168, 240, 0.3);
+  border-radius: 10px;
+  padding: 12px;
+  background: rgba(11, 19, 35, 0.9);
+}
+
+.file-preview-card h4 {
+  margin: 0 0 8px;
+  color: #e9f2ff;
+}
+
+.file-preview-card p {
+  margin: 6px 0;
+  color: #cfdff3;
+}
+
+.json-preview {
+  margin: 10px 0 0;
+  max-height: 220px;
+  overflow: auto;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(120, 168, 240, 0.25);
+  background: rgba(4, 9, 17, 0.9);
+  color: #dff0ff;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  white-space: pre;
+}
+
 .roi-panel {
   padding: 0;
   overflow: hidden;
@@ -734,5 +1041,10 @@ select:focus,
   .services-toolbar {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .file-preview-header {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

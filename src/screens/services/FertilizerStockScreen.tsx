@@ -8,6 +8,10 @@ import '../../styles/fertilizerStock.css';
 
 type TabKey = 'district' | 'fertilizer' | 'search' | 'inventory';
 
+type FertilizerStockScreenProps = {
+  initialDistrict?: string;
+};
+
 interface ScreenState {
   loading: boolean;
   error: string;
@@ -44,7 +48,7 @@ const INITIAL_STATE: ScreenState = {
   selectedItem: null,
 };
 
-function FertilizerStockScreen() {
+function FertilizerStockScreen({ initialDistrict }: FertilizerStockScreenProps) {
   const [state, setState] = React.useState<ScreenState>(INITIAL_STATE);
 
   const initialize = React.useCallback(async () => {
@@ -59,7 +63,10 @@ function FertilizerStockScreen() {
       const availability = fertilizerStockService.getAvailabilityOverview();
       const statistics = fertilizerStockService.getStatistics();
 
-      const selectedDistrict = districts[0] ?? '';
+      const selectedDistrict =
+        initialDistrict && districts.includes(initialDistrict)
+          ? initialDistrict
+          : districts[0] ?? '';
       const selectedFertilizer = fertilizers[0] ?? '';
 
       setState((prev) => ({
@@ -87,7 +94,7 @@ function FertilizerStockScreen() {
         error: error instanceof Error ? error.message : 'Failed to load fertilizer stock data',
       }));
     }
-  }, []);
+  }, [initialDistrict]);
 
   React.useEffect(() => {
     initialize();
@@ -209,7 +216,7 @@ function FertilizerStockScreen() {
       {!state.loading && !state.error && (
         <section>
           {state.activeTab === 'district' && (
-            <div className="panel">
+            <div className="fert-panel">
               <div className="selector-grid">
                 {state.districts.map((district) => (
                   <button
@@ -230,7 +237,7 @@ function FertilizerStockScreen() {
           )}
 
           {state.activeTab === 'fertilizer' && (
-            <div className="panel">
+            <div className="fert-panel">
               <div className="selector-grid">
                 {state.fertilizers.map((fertilizerName) => (
                   <button
@@ -253,7 +260,7 @@ function FertilizerStockScreen() {
           )}
 
           {state.activeTab === 'search' && (
-            <div className="panel">
+            <div className="fert-panel">
               <input
                 value={state.searchKeyword}
                 onChange={(event) => onSearchChange(event.target.value)}
@@ -268,7 +275,7 @@ function FertilizerStockScreen() {
           )}
 
           {state.activeTab === 'inventory' && state.statistics && (
-            <div className="panel">
+            <div className="fert-panel">
               <div className="stats-grid">
                 <article className="stat-card">
                   <h3>Total Records</h3>

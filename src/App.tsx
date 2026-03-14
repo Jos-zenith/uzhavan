@@ -21,6 +21,13 @@ import {
   type ConnectivityState,
 } from './connectivity';
 import { computePredictiveRoi } from './roiEngine';
+import {
+  getDataBackedServiceCatalog,
+  getService2Dataset,
+  type DataBackedServiceCatalogItem,
+  getServiceDataFilePreviews,
+  type ServiceDataFilePreview,
+} from './serviceDataLoader';
 import { useTelemetryGovernance } from './sdkHooks/useTelemetryGovernance';
 import {
   AdminPanelScreen,
@@ -35,6 +42,16 @@ import {
   UserFeedbackScreen,
   UzhavanEMarketScreen,
   WeatherForecastScreen,
+  AgricultureNewsScreen,
+  BenefitRegistrationScreen,
+  CropInsuranceScreen,
+  FertilizerStockScreen,
+  MachineryHiringScreen,
+  MarketPriceScreen,
+  MSMECharterScreen,
+  PestIdentificationScreen,
+  ReservoirLevelsScreen,
+  SeedStockScreen,
 } from './screens';
 import { RoiConsole } from './components/RoiConsole';
 
@@ -85,8 +102,6 @@ type AppView =
   | 'admin'
   | 'developer';
 
-type ServiceScreenKey = 'weather' | 'officer' | 'feedback' | 'organic' | 'fpo' | 'atma' | 'market' | 'farmGuide';
-
 function App() {
   const draftSaveTimersRef = React.useRef<Partial<Record<keyof DraftFields, number>>>({});
   const [status, setStatus] = React.useState('Initializing offline foundation...');
@@ -102,11 +117,29 @@ function App() {
   );
   const [activeView, setActiveView] = React.useState<AppView>('overview');
   const [serviceSearch, setServiceSearch] = React.useState('');
-  const [activeServiceScreen, setActiveServiceScreen] = React.useState<ServiceScreenKey>('weather');
+  const [catalogServices, setCatalogServices] = React.useState<
+    DataBackedServiceCatalogItem[]
+  >([]);
+  const [catalogLoading, setCatalogLoading] = React.useState(false);
+  const [catalogResolved, setCatalogResolved] = React.useState(false);
+  const [catalogError, setCatalogError] = React.useState('');
+  const [filePreviewRows, setFilePreviewRows] = React.useState<ServiceDataFilePreview[]>([]);
+  const [filePreviewLoading, setFilePreviewLoading] = React.useState(false);
+  const [filePreviewResolved, setFilePreviewResolved] = React.useState(false);
+  const [filePreviewError, setFilePreviewError] = React.useState('');
+  const [activeServiceId, setActiveServiceId] = React.useState<number>(1);
   const [syncSnapshot, setSyncSnapshot] = React.useState<SyncStatusSnapshot>(
     EMPTY_SYNC_SNAPSHOT
   );
   const [syncMessage, setSyncMessage] = React.useState('');
+  const [locationDistricts, setLocationDistricts] = React.useState<string[]>([]);
+  const [locationBlocksByDistrict, setLocationBlocksByDistrict] = React.useState<
+    Record<string, string[]>
+  >({});
+  const [selectedLocationDistrict, setSelectedLocationDistrict] = React.useState('');
+  const [selectedLocationBlock, setSelectedLocationBlock] = React.useState('');
+  const [locationScopeLoading, setLocationScopeLoading] = React.useState(false);
+  const [locationScopeError, setLocationScopeError] = React.useState('');
 
   // Initialize telemetry governance specs and policies at app startup
   useTelemetryGovernance();
@@ -194,6 +227,68 @@ function App() {
       cancelled = true;
     };
   }, [connectivity.isOnline, refreshSyncSnapshot]);
+
+  React.useEffect(() => {
+    if (
+      (activeView !== 'services' && activeView !== 'serviceScreens') ||
+      catalogServices.length > 0 ||
+      catalogLoading
+    ) {
+      return;
+    }
+
+    let cancelled = false;
+    setCatalogLoading(true);
+    setCatalogResolved(false);
+    setCatalogError('');
+
+    const loadCatalog = async () => {
+      try {
+        const catalog = await getDataBackedServiceCatalog();
+        if (!cancelled) {
+          setCatalogServices(catalog);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setCatalogError(error instanceof Error ? error.message : String(error));
+        }
+      } finally {
+        if (!cancelled) {
+          setCatalogLoading(false);
+          setCatalogResolved(true);
+        }
+      }
+    };
+
+    void loadCatalog();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeView, catalogLoading, catalogServices.length]);
+
+  const loadFilePreviews = React.useCallback(async () => {
+    setFilePreviewLoading(true);
+    setFilePreviewError('');
+
+    try {
+      const previews = await getServiceDataFilePreviews(2);
+      setFilePreviewRows(previews);
+    } catch (error) {
+      setFilePreviewError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setFilePreviewLoading(false);
+      setFilePreviewResolved(true);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (activeView !== 'services' || filePreviewLoading || filePreviewResolved) {
+      return;
+    }
+
+    void loadFilePreviews();
+  }, [activeView, filePreviewLoading, filePreviewResolved, loadFilePreviews]);
 
   React.useEffect(() => {
     void refreshSyncSnapshot();
@@ -360,20 +455,211 @@ function App() {
     });
   }, []);
 
+  const servicesForTab = React.useMemo<DataBackedServiceCatalogItem[]>(() => {
+    if (!catalogResolved) {
+      return [];
+    }
+
+    if (catalogServices.length > 0) {
+      return catalogServices;
+    }
+
+    return services.map((service) => ({
+      id: String(service.id),
+      name: service.name,
+      purpose: service.purpose,
+      dataRequired: service.dataRequired,
+      localCache: service.localCache,
+      offlineCapability: service.offlineCapability,
+      usageImpact: service.usageImpact,
+      dependencies: service.dependencies,
+      source: 'json' as const,
+      sourcePath: 'seed:vital_services',
+      recordCount: 0,
+    }));
+  }, [catalogResolved, catalogServices, services]);
+
   const filteredServices = React.useMemo(() => {
     const keyword = serviceSearch.trim().toLowerCase();
     if (!keyword) {
-      return services;
+      return servicesForTab;
     }
 
-    return services.filter((service) => {
+    return servicesForTab.filter((service) => {
       return (
         service.name.toLowerCase().includes(keyword) ||
         service.purpose.toLowerCase().includes(keyword) ||
         service.dataRequired.toLowerCase().includes(keyword)
       );
     });
-  }, [serviceSearch, services]);
+  }, [serviceSearch, servicesForTab]);
+
+  // All 18 Uzhavan services are immediately available from the SQLite seed;
+  // no need to wait for the async catalog load.
+  const uzhavanServicesForScreens = services;
+
+  const loadLocationScope = React.useCallback(async () => {
+    setLocationScopeLoading(true);
+    setLocationScopeError('');
+
+    try {
+      const dataset = await getService2Dataset();
+      const blocksByDistrict = dataset.districtBlocks.reduce<Record<string, Set<string>>>(
+        (accumulator, row) => {
+          const district = row.districtName.trim();
+          const block = row.blockName.trim();
+
+          if (!district || !block) {
+            return accumulator;
+          }
+
+          if (!accumulator[district]) {
+            accumulator[district] = new Set<string>();
+          }
+
+          accumulator[district].add(block);
+          return accumulator;
+        },
+        {}
+      );
+
+      const districts = Object.keys(blocksByDistrict).sort((a, b) =>
+        a.localeCompare(b, 'en', { sensitivity: 'base' })
+      );
+
+      const normalizedBlocksByDistrict = Object.entries(blocksByDistrict).reduce<
+        Record<string, string[]>
+      >((accumulator, [district, blocks]) => {
+        accumulator[district] = Array.from(blocks).sort((a, b) =>
+          a.localeCompare(b, 'en', { sensitivity: 'base' })
+        );
+        return accumulator;
+      }, {});
+
+      setLocationDistricts(districts);
+      setLocationBlocksByDistrict(normalizedBlocksByDistrict);
+
+      const defaultDistrict = districts[0] ?? '';
+      setSelectedLocationDistrict((current) => current || defaultDistrict);
+      setSelectedLocationBlock((current) => {
+        if (current) {
+          return current;
+        }
+
+        return defaultDistrict
+          ? normalizedBlocksByDistrict[defaultDistrict]?.[0] ?? ''
+          : '';
+      });
+    } catch (error) {
+      setLocationScopeError(
+        error instanceof Error ? error.message : 'Unable to load location context'
+      );
+    } finally {
+      setLocationScopeLoading(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (
+      activeView !== 'serviceScreens' ||
+      locationScopeLoading ||
+      locationDistricts.length > 0
+    ) {
+      return;
+    }
+
+    void loadLocationScope();
+  }, [
+    activeView,
+    loadLocationScope,
+    locationDistricts.length,
+    locationScopeLoading,
+  ]);
+
+  React.useEffect(() => {
+    if (!selectedLocationDistrict) {
+      setSelectedLocationBlock('');
+      return;
+    }
+
+    const blocks = locationBlocksByDistrict[selectedLocationDistrict] ?? [];
+    if (!blocks.length) {
+      setSelectedLocationBlock('');
+      return;
+    }
+
+    if (!blocks.includes(selectedLocationBlock)) {
+      setSelectedLocationBlock(blocks[0]);
+    }
+  }, [locationBlocksByDistrict, selectedLocationBlock, selectedLocationDistrict]);
+
+  const selectedDistrictBlocks = React.useMemo(() => {
+    if (!selectedLocationDistrict) {
+      return [];
+    }
+
+    return locationBlocksByDistrict[selectedLocationDistrict] ?? [];
+  }, [locationBlocksByDistrict, selectedLocationDistrict]);
+
+  const getServiceScreenComponent = React.useCallback(
+    (serviceId: number) => {
+      switch (serviceId) {
+        case 1:
+          return <MSMECharterScreen />;
+        case 2:
+          return (
+            <BenefitRegistrationScreen
+              initialDistrict={selectedLocationDistrict || undefined}
+              initialBlock={selectedLocationBlock || undefined}
+            />
+          );
+        case 3:
+          return <CropInsuranceScreen />;
+        case 4:
+          return (
+            <FertilizerStockScreen initialDistrict={selectedLocationDistrict || undefined} />
+          );
+        case 5:
+          return <SeedStockScreen initialDistrict={selectedLocationDistrict || undefined} />;
+        case 6:
+          return (
+            <MachineryHiringScreen
+              initialDistrict={selectedLocationDistrict || undefined}
+              initialBlock={selectedLocationBlock || undefined}
+            />
+          );
+        case 7:
+          return <MarketPriceScreen />;
+        case 8:
+          return <WeatherForecastScreen />;
+        case 9:
+          return <OfficerContactInfoScreen />;
+        case 10:
+          return (
+            <ReservoirLevelsScreen initialDistrict={selectedLocationDistrict || undefined} />
+          );
+        case 11:
+          return <AgricultureNewsScreen />;
+        case 12:
+          return <UserFeedbackScreen />;
+        case 13:
+          return <MyFarmGuideScreen />;
+        case 14:
+          return <OrganicFarmingInfoScreen />;
+        case 15:
+          return <FpoProductsScreen />;
+        case 16:
+          return <PestIdentificationScreen />;
+        case 17:
+          return <AtmaTrainingRegistrationScreen />;
+        case 18:
+          return <UzhavanEMarketScreen />;
+        default:
+          return null;
+      }
+    },
+    [selectedLocationBlock, selectedLocationDistrict]
+  );
 
   const totalSyncActions = syncSnapshot.actions.length;
   const syncedActions = syncSnapshot.actions.filter((action) => action.status === 'synced').length;
@@ -740,7 +1026,7 @@ function App() {
         {activeView === 'services' && (
           <section className="panel">
             <div className="services-toolbar">
-              <h2>Vital Services</h2>
+              <h2>Data-backed Services ({filteredServices.length})</h2>
               <input
                 value={serviceSearch}
                 onChange={(event) => setServiceSearch(event.target.value)}
@@ -748,15 +1034,76 @@ function App() {
               />
             </div>
 
+            <section className="file-preview-panel">
+              <div className="file-preview-header">
+                <h3>JSON/File Data Preview</h3>
+                <button
+                  className="secondary-btn"
+                  onClick={() => void loadFilePreviews()}
+                  disabled={filePreviewLoading}
+                >
+                  {filePreviewLoading ? 'Refreshing...' : 'Refresh Previews'}
+                </button>
+              </div>
+              <p className="saved-meta">
+                Showing live payload samples loaded from files under <strong>/public/data</strong>.
+              </p>
+
+              {filePreviewError && (
+                <p className="status-error">Unable to load file previews: {filePreviewError}</p>
+              )}
+
+              {!filePreviewLoading && filePreviewRows.length === 0 && (
+                <p className="saved-meta">No file preview data available yet.</p>
+              )}
+
+              <div className="file-preview-grid">
+                {filePreviewRows.map((preview) => (
+                  <article key={preview.id} className="file-preview-card">
+                    <h4>{preview.name}</h4>
+                    <span className="service-badge">
+                      {preview.sourceType.toUpperCase()} · {preview.status.toUpperCase()} · Records:{' '}
+                      {preview.recordCount}
+                    </span>
+                    <p>
+                      <strong>File:</strong> {preview.sourcePath}
+                    </p>
+                    {preview.generatedAt && (
+                      <p>
+                        <strong>Generated:</strong> {preview.generatedAt}
+                      </p>
+                    )}
+                    {preview.error && <p className="status-error">{preview.error}</p>}
+                    {preview.status === 'loaded' && (
+                      <pre className="json-preview">
+                        {JSON.stringify(preview.sample, null, 2)}
+                      </pre>
+                    )}
+                    {preview.status === 'file-only' && (
+                      <p className="saved-meta">
+                        Binary workbook file detected. Row counts are listed in catalog via sheet
+                        summary JSON.
+                      </p>
+                    )}
+                  </article>
+                ))}
+              </div>
+            </section>
+
+            {catalogLoading && <p className="saved-meta">Loading catalog from JSON and Excel...</p>}
+            {catalogError && (
+              <p className="status-error">Failed to load full catalog: {catalogError}</p>
+            )}
+
             <div className="service-grid">
               {filteredServices.map((service) => (
                 <article key={service.id} className="service-card">
                   <h3>
-                    {service.id}. {service.name}
+                    {service.id} - {service.name}
                   </h3>
-                  {(service.name.includes('Weather') || service.name.includes('Agriculture News')) && (
-                    <span className="service-badge">Pre-synced offline bulletin</span>
-                  )}
+                  <span className="service-badge">
+                    Source: {service.source.toUpperCase()} · Records: {service.recordCount}
+                  </span>
                   <p>
                     <strong>Purpose:</strong> {service.purpose}
                   </p>
@@ -772,41 +1119,121 @@ function App() {
                   <p>
                     <strong>Impact:</strong> {service.usageImpact}
                   </p>
+                  <p>
+                    <strong>Source Path:</strong> {service.sourcePath}
+                  </p>
                 </article>
               ))}
             </div>
           </section>
         )}
 
-        {activeView === 'serviceScreens' && (
-          <section className="panel">
-            <div className="services-toolbar">
-              <h2>Service Screens</h2>
-              <select
-                value={activeServiceScreen}
-                onChange={(event) => setActiveServiceScreen(event.target.value as ServiceScreenKey)}
-              >
-                <option value="weather">#8 Daily Weather Forecast</option>
-                <option value="officer">#9 Officer Contact Info</option>
-                <option value="feedback">#12 User Feedback</option>
-                <option value="farmGuide">#13 My Farm Guide</option>
-                <option value="organic">#14 Organic Farming Info</option>
-                <option value="fpo">#15 FPO Products</option>
-                <option value="atma">#17 ATMA Training Registration</option>
-                <option value="market">#18 Uzhavan e-Market</option>
-              </select>
-            </div>
+        {activeView === 'serviceScreens' && (() => {
+          const activeService = uzhavanServicesForScreens.find((s) => s.id === activeServiceId)
+            ?? uzhavanServicesForScreens[0];
+          const activeScreen = activeService ? getServiceScreenComponent(activeService.id) : null;
 
-            {activeServiceScreen === 'weather' && <WeatherForecastScreen />}
-            {activeServiceScreen === 'officer' && <OfficerContactInfoScreen />}
-            {activeServiceScreen === 'feedback' && <UserFeedbackScreen />}
-            {activeServiceScreen === 'farmGuide' && <MyFarmGuideScreen />}
-            {activeServiceScreen === 'organic' && <OrganicFarmingInfoScreen />}
-            {activeServiceScreen === 'fpo' && <FpoProductsScreen />}
-            {activeServiceScreen === 'atma' && <AtmaTrainingRegistrationScreen />}
-            {activeServiceScreen === 'market' && <UzhavanEMarketScreen />}
-          </section>
-        )}
+          return (
+            <section className="panel uzhavan-layout">
+              {/* Sidebar */}
+              <aside className="uzhavan-sidebar">
+                <div className="uzhavan-sidebar-header">
+                  <span className="uzhavan-sidebar-title">Uzhavan Services</span>
+                  <span className="uzhavan-sidebar-count">{uzhavanServicesForScreens.length || 18}</span>
+                </div>
+                <ul className="uzhavan-service-list">
+                  {(uzhavanServicesForScreens.length > 0
+                    ? uzhavanServicesForScreens
+                    : (Array.from({ length: 18 }, (_, i) => ({ id: i + 1, name: `Service ${i + 1}` })) as Array<{ id: number; name: string }>)
+                  ).map((service) => (
+                    <li key={service.id}>
+                      <button
+                        className={`uzhavan-service-item${ service.id === activeServiceId ? ' active' : ''}`}
+                        onClick={() => setActiveServiceId(service.id)}
+                      >
+                        <span className="uzhavan-service-num">#{service.id}</span>
+                        <span className="uzhavan-service-name">{service.name}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </aside>
+
+              {/* Main content */}
+              <div className="uzhavan-main">
+                {/* Location bar */}
+                <div className="uzhavan-location-bar">
+                  <label className="uzhavan-loc-field">
+                    <span>District</span>
+                    <select
+                      value={selectedLocationDistrict}
+                      onChange={(e) => setSelectedLocationDistrict(e.target.value)}
+                    >
+                      <option value="">Select district</option>
+                      {locationDistricts.map((d) => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="uzhavan-loc-field">
+                    <span>Block</span>
+                    <select
+                      value={selectedLocationBlock}
+                      onChange={(e) => setSelectedLocationBlock(e.target.value)}
+                      disabled={!selectedLocationDistrict || selectedDistrictBlocks.length === 0}
+                    >
+                      <option value="">Select block</option>
+                      {selectedDistrictBlocks.map((b) => (
+                        <option key={b} value={b}>{b}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <button
+                    className="secondary-btn"
+                    onClick={() => void loadLocationScope()}
+                    disabled={locationScopeLoading}
+                    style={{ alignSelf: 'flex-end' }}
+                  >
+                    {locationScopeLoading ? 'Loading...' : 'Reload'}
+                  </button>
+                  {locationScopeError ? (
+                    <p className="status-error" style={{ margin: 0, alignSelf: 'center' }}>{locationScopeError}</p>
+                  ) : null}
+                </div>
+
+                {/* Active service header */}
+                {activeService && (
+                  <div className="uzhavan-service-header">
+                    <h2>#{activeService.id} — {activeService.name}</h2>
+                    <div className="uzhavan-meta-row">
+                      <span><strong>Purpose:</strong> {activeService.purpose}</span>
+                    </div>
+                    <div className="uzhavan-meta-chips">
+                      <span className="uzhavan-chip">{activeService.offlineCapability}</span>
+                      <span className="uzhavan-chip uzhavan-chip--impact">{activeService.usageImpact}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Screen or placeholder */}
+                <div className="uzhavan-screen-body">
+                  {activeScreen ?? (
+                    <div className="uzhavan-coming-soon">
+                      <p>Interactive screen coming soon for this service.</p>
+                      {activeService && (
+                        <ul>
+                          <li><strong>Data required:</strong> {activeService.dataRequired}</li>
+                          <li><strong>Local cache:</strong> {activeService.localCache}</li>
+                          <li><strong>Dependencies:</strong> {activeService.dependencies}</li>
+                        </ul>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
+          );
+        })()}
 
         {activeView === 'roi' && (
           <section className="panel roi-panel">

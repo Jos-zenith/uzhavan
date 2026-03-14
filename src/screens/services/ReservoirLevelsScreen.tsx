@@ -27,6 +27,10 @@ export type UseReservoirReturn = {
   getIrrigationAdvice: (district: string) => Promise<void>;
 };
 
+type ReservoirLevelsScreenProps = {
+  initialDistrict?: string;
+};
+
 /**
  * useReservoir Hook
  * Manages reservoir data fetching and state
@@ -185,9 +189,12 @@ export function useReservoir(): UseReservoirReturn {
  * ReservoirLevelsScreen Component
  * Full UI for reservoir water level monitoring
  */
-export function ReservoirLevelsScreen() {
-  const [selectedDistrict, setSelectedDistrict] = useState<string>('all');
-  const [viewMode, setViewMode] = useState<'all' | 'critical' | 'district'>('all');
+export function ReservoirLevelsScreen({ initialDistrict }: ReservoirLevelsScreenProps) {
+  const [selectedDistrict, setSelectedDistrict] = useState<string>(initialDistrict || 'all');
+  const [viewMode, setViewMode] = useState<'all' | 'critical' | 'district'>(
+    initialDistrict ? 'district' : 'all'
+  );
+  const [districts, setDistricts] = useState<string[]>([]);
 
   const {
     reservoirs,
@@ -202,27 +209,27 @@ export function ReservoirLevelsScreen() {
     getIrrigationAdvice,
   } = useReservoir();
 
-  const districts = [
-    'Salem',
-    'Erode',
-    'Namakkal',
-    'Dharmapuri',
-    'Krishnagiri',
-    'Coimbatore',
-    'Tiruppur',
-    'Dindigul',
-    'Theni',
-    'Madurai',
-    'Virudhunagar',
-    'Thanjavur',
-    'Tiruchirappalli',
-    'Karur',
-    'Chennai',
-  ];
-
   useEffect(() => {
-    loadAllReservoirs();
-  }, [loadAllReservoirs]);
+    const initialize = async () => {
+      const allReservoirs = await reservoirService.getAllReservoirs();
+      const uniqueDistricts = Array.from(
+        new Set(allReservoirs.map((row) => row.district).filter(Boolean))
+      ).sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' }));
+      setDistricts(uniqueDistricts);
+
+      if (initialDistrict && uniqueDistricts.includes(initialDistrict)) {
+        setSelectedDistrict(initialDistrict);
+        setViewMode('district');
+        await loadReservoirsByDistrict(initialDistrict);
+        await getIrrigationAdvice(initialDistrict);
+        return;
+      }
+
+      await loadAllReservoirs();
+    };
+
+    void initialize();
+  }, [getIrrigationAdvice, initialDistrict, loadAllReservoirs, loadReservoirsByDistrict]);
 
   const handleViewChange = (mode: 'all' | 'critical' | 'district', district?: string) => {
     setViewMode(mode);

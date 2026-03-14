@@ -1,16 +1,18 @@
 /* ROI Console Layout */
 
 .roi-console {
-  display: flex;
-  height: 100vh;
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  min-height: 680px;
+  height: calc(100vh - 220px);
   background: linear-gradient(135deg, #0f1729 0%, #1a2847 50%, #0f1729 100%);
   overflow: hidden;
+  border-radius: 14px;
 }
 
 .roi-console-content {
-  flex: 1;
+  min-width: 0;
   overflow-y: auto;
-  margin-left: 220px;
   background: linear-gradient(135deg, #0f1729 0%, #1a2847 50%, #0f1729 100%);
 }
 
@@ -34,13 +36,24 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+  .roi-console {
+    grid-template-columns: 76px minmax(0, 1fr);
+    min-height: 620px;
+    height: auto;
+  }
+
   .roi-console-content {
-    margin-left: 180px;
+    margin-left: 0;
   }
 }
 
 @media (max-width: 480px) {
+  .roi-console {
+    grid-template-columns: 60px minmax(0, 1fr);
+    min-height: 560px;
+  }
+
   .roi-console-content {
-    margin-left: 60px;
+    margin-left: 0;
   }
 }

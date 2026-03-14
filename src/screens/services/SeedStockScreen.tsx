@@ -25,10 +25,14 @@ interface SeedStockState {
   selectedStockItem: SeedStock | null;
 }
 
+type SeedStockScreenProps = {
+  initialDistrict?: string;
+};
+
 /**
  * Custom Hook: useSeedStock
  */
-function useSeedStock() {
+function useSeedStock(initialDistrict?: string) {
   const [state, setState] = useState<SeedStockState>({
     allStock: [],
     filteredStock: [],
@@ -48,13 +52,33 @@ function useSeedStock() {
     (async () => {
       try {
         await seedStockService.initialize('/data/service-5-seed-stock.json');
+
+        const allStock = seedStockService.getAllStock();
+        const locationHierarchy = seedStockService.getLocationHierarchy();
+        const districts = locationHierarchy.districts;
+        const preferredDistrict =
+          initialDistrict && districts.includes(initialDistrict)
+            ? initialDistrict
+            : districts[0] || '';
+        const preferredFarms = preferredDistrict
+          ? seedStockService.getFarmsByDistrict(preferredDistrict)
+          : [];
+        const preferredFarm = preferredFarms[0] || '';
         
         setState((prev) => ({
           ...prev,
-          allStock: seedStockService.getAllStock(),
-          filteredStock: seedStockService.getAllStock(),
-          locationHierarchy: seedStockService.getLocationHierarchy(),
+          allStock,
+          filteredStock: preferredDistrict
+            ? seedStockService.getStockByDistrict(preferredDistrict)
+            : allStock,
+          locationHierarchy,
           availability: seedStockService.getAvailabilityOverview(),
+          selectedDistrict: preferredDistrict,
+          selectedFarm: preferredFarm,
+          selectedFarmStock:
+            preferredDistrict && preferredFarm
+              ? seedStockService.getStockByFarm(preferredDistrict, preferredFarm)
+              : [],
           loading: false
         }));
       } catch (err) {
@@ -65,7 +89,7 @@ function useSeedStock() {
         }));
       }
     })();
-  }, []);
+  }, [initialDistrict]);
 
   // Handle district selection
   const selectDistrict = useCallback((district: string) => {
@@ -152,9 +176,9 @@ function useSeedStock() {
 /**
  * Main Seedlings Browser Component
  */
-export const SeedStockScreen: React.FC = () => {
+export const SeedStockScreen: React.FC<SeedStockScreenProps> = ({ initialDistrict }) => {
   const [activeTab, setActiveTab] = useState<'location' | 'category' | 'search' | 'inventory'>('location');
-  const state = useSeedStock();
+  const state = useSeedStock(initialDistrict);
 
   if (state.loading) {
     return <div className="seed-loading">Loading seed inventory...</div>;

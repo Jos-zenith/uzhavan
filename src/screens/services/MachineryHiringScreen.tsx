@@ -218,7 +218,15 @@ function useMachineryHiring() {
 // MAIN COMPONENT
 // ============================================================
 
-export default function MachineryHiringScreen() {
+type MachineryHiringScreenProps = {
+  initialDistrict?: string;
+  initialBlock?: string;
+};
+
+export default function MachineryHiringScreen({
+  initialDistrict,
+  initialBlock,
+}: MachineryHiringScreenProps) {
   const [activeTab, setActiveTab] = useState<'catalogue' | 'book' | 'repair' | 'bookings' | 'stats'>('catalogue');
   
   const {
@@ -240,15 +248,15 @@ export default function MachineryHiringScreen() {
   } = useMachineryHiring();
 
   // Catalogue tab state
-  const [filterDistrict, setFilterDistrict] = useState('');
+  const [filterDistrict, setFilterDistrict] = useState(initialDistrict || '');
   const [filterType, setFilterType] = useState<MachineryType | ''>('');
 
   // Booking tab state
   const [bookingForm, setBookingForm] = useState({
     farmerName: '',
     mobileNumber: '',
-    district: '',
-    block: '',
+    district: initialDistrict || '',
+    block: initialBlock || '',
     villageName: '',
     landArea: '',
     cropType: '',
@@ -261,8 +269,8 @@ export default function MachineryHiringScreen() {
   const [repairForm, setRepairForm] = useState({
     farmerName: '',
     mobileNumber: '',
-    district: '',
-    block: '',
+    district: initialDistrict || '',
+    block: initialBlock || '',
     machineryType: '' as MachineryType | '',
     problemDescription: '',
     urgency: 'Medium' as RepairRequest['urgency'],
@@ -282,6 +290,14 @@ export default function MachineryHiringScreen() {
       screen: 'MachineryHiringScreen',
     });
   }, [loadMachinery, loadMechanics]);
+
+  useEffect(() => {
+    if (!initialDistrict) {
+      return;
+    }
+
+    void searchMachinery(initialDistrict, (filterType as MachineryType) || undefined);
+  }, [initialDistrict, filterType, searchMachinery]);
 
   // Handle catalogue search
   const handleCatalogueSearch = () => {

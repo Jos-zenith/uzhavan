@@ -38,6 +38,11 @@ export type UseBenefitRegistrationReturn = {
   ) => Promise<void>;
 };
 
+type BenefitRegistrationScreenProps = {
+  initialDistrict?: string;
+  initialBlock?: string;
+};
+
 /**
  * useBenefitRegistration Hook
  * Manages benefit registration state and operations
@@ -225,7 +230,10 @@ export function useBenefitRegistration(): UseBenefitRegistrationReturn {
  * BenefitRegistrationScreen Component
  * Full UI for benefit registration management
  */
-export function BenefitRegistrationScreen() {
+export function BenefitRegistrationScreen({
+  initialDistrict,
+  initialBlock,
+}: BenefitRegistrationScreenProps) {
   const [activeTab, setActiveTab] = useState<'register' | 'view' | 'schemes' | 'stats'>('schemes');
   const [selectedScheme, setSelectedScheme] = useState<string>('');
   const [selectedDistrict, setSelectedDistrict] = useState<string>('');
@@ -272,10 +280,54 @@ export function BenefitRegistrationScreen() {
   }, [loadSchemes, loadDistricts, loadStats]);
 
   useEffect(() => {
+    if (!initialDistrict || districts.length === 0) {
+      return;
+    }
+
+    if (selectedDistrict) {
+      return;
+    }
+
+    if (!districts.includes(initialDistrict)) {
+      return;
+    }
+
+    setSelectedDistrict(initialDistrict);
+    setFormData((prev) => ({
+      ...prev,
+      districtName: initialDistrict,
+    }));
+  }, [districts, initialDistrict, selectedDistrict]);
+
+  useEffect(() => {
     if (selectedDistrict) {
       loadBlocks(selectedDistrict);
     }
   }, [selectedDistrict, loadBlocks]);
+
+  useEffect(() => {
+    if (!selectedDistrict || blocks.length === 0 || selectedBlock) {
+      return;
+    }
+
+    const preferredBlock =
+      initialBlock &&
+      blocks.some((blockItem) => blockItem.blockName === initialBlock)
+        ? initialBlock
+        : blocks[0].blockName;
+
+    const matchedBlock = blocks.find((blockItem) => blockItem.blockName === preferredBlock);
+    if (!matchedBlock) {
+      return;
+    }
+
+    setSelectedBlock(matchedBlock.blockName);
+    setFormData((prev) => ({
+      ...prev,
+      blockName: matchedBlock.blockName,
+      lgdDistrictCode: matchedBlock.lgdDistrictCode,
+    }));
+  }, [blocks, initialBlock, selectedBlock, selectedDistrict]);
 
   const handleDistrictChange = (district: string) => {
     setSelectedDistrict(district);

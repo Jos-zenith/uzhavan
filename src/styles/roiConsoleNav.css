@@ -1,16 +1,13 @@
 /* ROI Console Navigation */
 
 .roi-console-nav {
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 220px;
-  height: 100vh;
+  position: relative;
+  width: 260px;
+  height: 100%;
   background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(26, 40, 71, 0.95) 100%);
   border-right: 1px solid rgba(122, 216, 255, 0.3);
   display: flex;
   flex-direction: column;
-  z-index: 100;
   backdrop-filter: blur(12px);
 }
 
@@ -54,6 +51,7 @@
   font-weight: 500;
   transition: all 0.2s;
   text-align: left;
+  position: relative;
 }
 
 .nav-link:hover {
@@ -110,11 +108,12 @@
 /* Responsive */
 @media (max-width: 768px) {
   .roi-console-nav {
-    width: 180px;
+    width: 76px;
   }
 
   .nav-link {
-    padding: 10px 12px;
+    padding: 12px;
+    justify-content: center;
   }
 
   .nav-label {
@@ -124,6 +123,35 @@
   .nav-title {
     font-size: 0.9rem;
     justify-content: center;
+  }
+
+  .nav-footer {
+    display: none;
+  }
+
+  .nav-link::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: calc(100% + 8px);
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0;
+    pointer-events: none;
+    white-space: nowrap;
+    font-size: 0.78rem;
+    color: #d8ebff;
+    background: rgba(8, 14, 25, 0.95);
+    border: 1px solid rgba(122, 216, 255, 0.4);
+    border-radius: 8px;
+    padding: 6px 8px;
+    box-shadow: 0 8px 20px rgba(5, 10, 18, 0.4);
+    transition: opacity 0.15s ease;
+    z-index: 12;
+  }
+
+  .nav-link:hover::after,
+  .nav-link:focus-visible::after {
+    opacity: 1;
   }
 }
 

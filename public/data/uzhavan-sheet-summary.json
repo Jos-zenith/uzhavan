@@ -1,0 +1,66 @@
+{
+  "source": "public/data/uzhavan.xlsx",
+  "generatedAt": "2026-03-14T01:58:34.798Z",
+  "sheets": [
+    {
+      "sheetName": "block_eng",
+      "recordCount": 388
+    },
+    {
+      "sheetName": "tractor",
+      "recordCount": 323200
+    },
+    {
+      "sheetName": "CM",
+      "recordCount": 21000
+    },
+    {
+      "sheetName": "mechanic",
+      "recordCount": 65232
+    },
+    {
+      "sheetName": "Sheet3",
+      "recordCount": 0
+    },
+    {
+      "sheetName": "farm_stock",
+      "recordCount": 2486
+    },
+    {
+      "sheetName": "river",
+      "recordCount": 145
+    },
+    {
+      "sheetName": "TNPDCL - Application Portal",
+      "recordCount": 37
+    },
+    {
+      "sheetName": "TNPDCL - Application Portal (1)",
+      "recordCount": 56
+    },
+    {
+      "sheetName": "TNPDCL - Application Portal (2)",
+      "recordCount": 148
+    },
+    {
+      "sheetName": "data",
+      "recordCount": 999
+    },
+    {
+      "sheetName": "AED",
+      "recordCount": 999
+    },
+    {
+      "sheetName": "msme",
+      "recordCount": 999
+    },
+    {
+      "sheetName": "charter",
+      "recordCount": 842
+    },
+    {
+      "sheetName": "ROI_Use_Cases",
+      "recordCount": 4
+    }
+  ]
+}

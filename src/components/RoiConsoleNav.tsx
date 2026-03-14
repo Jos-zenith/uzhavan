@@ -28,6 +28,8 @@ export const RoiConsoleNav: React.FC<Props> = ({ currentScreen, onNavigate }) =>
               className={`nav-link ${currentScreen === item.id ? 'active' : ''}`}
               onClick={() => onNavigate(item.id)}
               title={item.label}
+              aria-label={item.label}
+              data-tooltip={item.label}
             >
               <span className="nav-icon">{item.icon}</span>
               <span className="nav-label">{item.label.split(' ').length > 1 ? item.label.split(' ')[1] : item.label}</span>
