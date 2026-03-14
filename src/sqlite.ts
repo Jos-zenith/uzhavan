@@ -489,6 +489,26 @@ const BASE_RETRY_DELAY_MS = 30_000;
 const DEFAULT_DRAFT_ABANDONMENT_MINUTES = 30;
 
 let databasePromise: Promise<SQLite.SQLiteDatabase> | null = null;
+let initializationPromise: Promise<number> | null = null;
+let activeSyncPromise: Promise<ConnectivityState> | null = null;
+let scheduledSyncTimer: ReturnType<typeof setTimeout> | null = null;
+
+function scheduleSyncProcessing(delayMs: number = 700): void {
+  if (!getConnectivityState().isOnline) {
+    return;
+  }
+
+  if (scheduledSyncTimer) {
+    clearTimeout(scheduledSyncTimer);
+  }
+
+  scheduledSyncTimer = setTimeout(() => {
+    scheduledSyncTimer = null;
+    void processSyncQueue().catch(() => {
+      // Keep the scheduler resilient: errors are already tracked in sync_queue_policy.
+    });
+  }, delayMs);
+}
 
 async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
   if (!databasePromise) {
@@ -812,19 +832,40 @@ async function seedServiceCache(db: SQLite.SQLiteDatabase, secret: string): Prom
   }
 }
 
-export async function initializeDatabase(): Promise<number> {
-  const db = await getDatabase();
-  const secret = getOrCreateEncryptionSecret();
-
-  await createSchema(db);
-  await seedVitalServices(db);
-  await seedServiceCache(db, secret);
-
+async function getVitalServiceCount(db: SQLite.SQLiteDatabase): Promise<number> {
   const row = await db.getFirstAsync<{ count: number }>(
     'SELECT COUNT(*) as count FROM vital_services;'
   );
 
   return row?.count ?? 0;
+}
+
+export async function initializeDatabase(): Promise<number> {
+  if (initializationPromise) {
+    return initializationPromise;
+  }
+
+  initializationPromise = (async () => {
+    const db = await getDatabase();
+    const secret = getOrCreateEncryptionSecret();
+
+    await createSchema(db);
+
+    const existingCount = await getVitalServiceCount(db);
+    if (existingCount > 0) {
+      return existingCount;
+    }
+
+    await seedVitalServices(db);
+    await seedServiceCache(db, secret);
+
+    return getVitalServiceCount(db);
+  })().catch((error) => {
+    initializationPromise = null;
+    throw error;
+  });
+
+  return initializationPromise;
 }
 
 export async function getVitalServices(): Promise<VitalService[]> {
@@ -1199,7 +1240,7 @@ export async function saveDraftFieldAtomic(
   queueLocalChange();
 
   if (getConnectivityState().isOnline) {
-    await processSyncQueue();
+    scheduleSyncProcessing();
   }
 }
 
@@ -1492,7 +1533,7 @@ export async function recordLandParcelMutation(
   queueLocalChange();
 
   if (getConnectivityState().isOnline) {
-    await processSyncQueue();
+    scheduleSyncProcessing();
   }
 }
 
@@ -1537,6 +1578,15 @@ export async function listLandParcelConflicts(
 }
 
 export async function processSyncQueue(forceProcessAll: boolean = false): Promise<ConnectivityState> {
+  if (activeSyncPromise) {
+    if (!forceProcessAll) {
+      return activeSyncPromise;
+    }
+
+    await activeSyncPromise;
+  }
+
+  const runner = async (): Promise<ConnectivityState> => {
   const db = await getDatabase();
   const connection = getConnectivityState();
 
@@ -1642,6 +1692,13 @@ export async function processSyncQueue(forceProcessAll: boolean = false): Promis
   }
 
   return getConnectivityState();
+  };
+
+  activeSyncPromise = runner().finally(() => {
+    activeSyncPromise = null;
+  });
+
+  return activeSyncPromise;
 }
 
 function toSyncStatusLabel(status: SyncQueueStatus): SyncActionStatusLabel {

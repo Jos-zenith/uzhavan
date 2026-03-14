@@ -40,6 +40,7 @@ import { RoiConsole } from './components/RoiConsole';
 
 const BENEFIT_REGISTRATION_SERVICE_ID = 2;
 const BENEFIT_DRAFT_KEY = 'benefit_registration';
+const SYNC_ACTIONS_PREVIEW_LIMIT = 25;
 
 const EMPTY_SYNC_SNAPSHOT: SyncStatusSnapshot = {
   connectivity: {
@@ -87,6 +88,7 @@ type AppView =
 type ServiceScreenKey = 'weather' | 'officer' | 'feedback' | 'organic' | 'fpo' | 'atma' | 'market' | 'farmGuide';
 
 function App() {
+  const draftSaveTimersRef = React.useRef<Partial<Record<keyof DraftFields, number>>>({});
   const [status, setStatus] = React.useState('Initializing offline foundation...');
   const [services, setServices] = React.useState<VitalService[]>([]);
   const [connectivity, setConnectivity] = React.useState<ConnectivityState>(
@@ -118,7 +120,7 @@ function App() {
   }, []);
 
   const refreshSyncSnapshot = React.useCallback(async () => {
-    const snapshot = await getSyncStatusSnapshot();
+    const snapshot = await getSyncStatusSnapshot(SYNC_ACTIONS_PREVIEW_LIMIT);
     setSyncSnapshot(snapshot);
   }, []);
 
@@ -149,9 +151,6 @@ function App() {
         setStatus(`Offline foundation ready. Loaded ${serviceCount} services.`);
         await refreshDraftAnalytics();
 
-        if (connectivity.isOnline) {
-          await processSyncQueue();
-        }
         await refreshSyncSnapshot();
       } catch (error) {
         if (isMounted) {
@@ -170,16 +169,74 @@ function App() {
       isMounted = false;
       unsubscribe();
     };
-  }, [connectivity.isOnline, refreshDraftAnalytics, refreshSyncSnapshot]);
+  }, [refreshDraftAnalytics, refreshSyncSnapshot]);
+
+  React.useEffect(() => {
+    if (!connectivity.isOnline) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const syncWhenOnline = async () => {
+      try {
+        await processSyncQueue();
+      } finally {
+        if (!cancelled) {
+          await refreshSyncSnapshot();
+        }
+      }
+    };
+
+    void syncWhenOnline();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [connectivity.isOnline, refreshSyncSnapshot]);
 
   React.useEffect(() => {
     void refreshSyncSnapshot();
     const interval = window.setInterval(() => {
       void refreshSyncSnapshot();
-    }, 12000);
+    }, 20000);
 
     return () => window.clearInterval(interval);
   }, [refreshSyncSnapshot]);
+
+  React.useEffect(() => {
+    const draftSaveTimers = draftSaveTimersRef.current;
+
+    return () => {
+      Object.values(draftSaveTimers).forEach((timerId) => {
+        if (timerId) {
+          window.clearTimeout(timerId);
+        }
+      });
+    };
+  }, []);
+
+  const persistDraftField = React.useCallback(
+    async (fieldName: keyof DraftFields, fieldValue: string) => {
+      try {
+        await saveDraftFieldAtomic(
+          BENEFIT_REGISTRATION_SERVICE_ID,
+          BENEFIT_DRAFT_KEY,
+          fieldName,
+          fieldValue
+        );
+
+        setLastSavedAt(new Date().toLocaleTimeString());
+        await refreshDraftAnalytics();
+      } catch (error) {
+        setSyncMessage(
+          `Draft save failed: ${error instanceof Error ? error.message : String(error)}`
+        );
+        window.setTimeout(() => setSyncMessage(''), 3500);
+      }
+    },
+    [refreshDraftAnalytics]
+  );
 
   const handleDraftFieldChange =
     (fieldName: keyof DraftFields) => async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -190,15 +247,18 @@ function App() {
         [fieldName]: fieldValue,
       }));
 
-      await saveDraftFieldAtomic(
-        BENEFIT_REGISTRATION_SERVICE_ID,
-        BENEFIT_DRAFT_KEY,
-        fieldName,
-        fieldValue
-      );
+      const existingTimer = draftSaveTimersRef.current[fieldName];
+      if (existingTimer) {
+        window.clearTimeout(existingTimer);
+      }
 
-      setLastSavedAt(new Date().toLocaleTimeString());
-      await refreshDraftAnalytics();
+      draftSaveTimersRef.current[fieldName] = window.setTimeout(() => {
+        void persistDraftField(fieldName, fieldValue);
+      }, 450);
+
+      if (syncMessage.startsWith('Draft save failed')) {
+        setSyncMessage('');
+      }
     };
 
   const handleResumeDraft = async () => {
@@ -261,33 +321,44 @@ function App() {
   }, []);
 
   const heroDaysSinceOnboarding = 10;
-  const predictiveHero = computePredictiveRoi(
-    'Madurai',
-    'Millet',
-    heroDaysSinceOnboarding,
-    [8, 13, 16, 3],
-    {
-      deltaYieldAi: 240,
-      deltaMarketPrice: 2.4,
-      deltaInputCostSavings: 3200,
-      deltaTransactionCostSavings: 550,
-      deltaOperationalCostSavings: 760,
-      deltaRiskCostSavings: 640,
-    }
+  const predictiveHero = React.useMemo(
+    () =>
+      computePredictiveRoi('Madurai', 'Millet', heroDaysSinceOnboarding, [8, 13, 16, 3], {
+        deltaYieldAi: 240,
+        deltaMarketPrice: 2.4,
+        deltaInputCostSavings: 3200,
+        deltaTransactionCostSavings: 550,
+        deltaOperationalCostSavings: 760,
+        deltaRiskCostSavings: 640,
+      }),
+    [heroDaysSinceOnboarding]
   );
 
-  const yieldIncreasePercent =
-    ((predictiveHero.breakdown.adjustedYield - predictiveHero.baselineUsed.avgYield) /
-      predictiveHero.baselineUsed.avgYield) *
-    100;
-  const baselineCostTotal =
-    predictiveHero.baselineUsed.avgInputCost +
-    predictiveHero.baselineUsed.avgTransactionCost +
-    predictiveHero.baselineUsed.avgInputCost * 0.12 +
-    predictiveHero.baselineUsed.avgInputCost * 0.08;
-  const costSavings = baselineCostTotal - predictiveHero.breakdown.totalCosts;
+  const { yieldIncreasePercent, costSavings } = React.useMemo(() => {
+    const increasePercent =
+      ((predictiveHero.breakdown.adjustedYield - predictiveHero.baselineUsed.avgYield) /
+        predictiveHero.baselineUsed.avgYield) *
+      100;
+    const baselineCostTotal =
+      predictiveHero.baselineUsed.avgInputCost +
+      predictiveHero.baselineUsed.avgTransactionCost +
+      predictiveHero.baselineUsed.avgInputCost * 0.12 +
+      predictiveHero.baselineUsed.avgInputCost * 0.08;
+
+    return {
+      yieldIncreasePercent: increasePercent,
+      costSavings: baselineCostTotal - predictiveHero.breakdown.totalCosts,
+    };
+  }, [predictiveHero]);
+
   const timeSavedHours = 14;
   const pestAlertsResolved = Math.max(0, services.length - 12);
+
+  const setActiveViewDeferred = React.useCallback((view: AppView) => {
+    React.startTransition(() => {
+      setActiveView(view);
+    });
+  }, []);
 
   const filteredServices = React.useMemo(() => {
     const keyword = serviceSearch.trim().toLowerCase();
@@ -385,55 +456,55 @@ function App() {
         <nav className="app-nav">
           <button
             className={activeView === 'overview' ? 'nav-btn active' : 'nav-btn'}
-            onClick={() => setActiveView('overview')}
+            onClick={() => setActiveViewDeferred('overview')}
           >
             Overview
           </button>
           <button
             className={activeView === 'draft' ? 'nav-btn active' : 'nav-btn'}
-            onClick={() => setActiveView('draft')}
+            onClick={() => setActiveViewDeferred('draft')}
           >
             Draft
           </button>
           <button
             className={activeView === 'services' ? 'nav-btn active' : 'nav-btn'}
-            onClick={() => setActiveView('services')}
+            onClick={() => setActiveViewDeferred('services')}
           >
             Services
           </button>
           <button
             className={activeView === 'serviceScreens' ? 'nav-btn active' : 'nav-btn'}
-            onClick={() => setActiveView('serviceScreens')}
+            onClick={() => setActiveViewDeferred('serviceScreens')}
           >
             Service Screens
           </button>
           <button
             className={activeView === 'sync' ? 'nav-btn active' : 'nav-btn'}
-            onClick={() => setActiveView('sync')}
+            onClick={() => setActiveViewDeferred('sync')}
           >
             Sync Status
           </button>
           <button
             className={activeView === 'roi' ? 'nav-btn active' : 'nav-btn'}
-            onClick={() => setActiveView('roi')}
+            onClick={() => setActiveViewDeferred('roi')}
           >
             ROI & Governance
           </button>
           <button
             className={activeView === 'roi-console' ? 'nav-btn active' : 'nav-btn'}
-            onClick={() => setActiveView('roi-console')}
+            onClick={() => setActiveViewDeferred('roi-console')}
           >
             🚀 ROI Console (NEW)
           </button>
           <button
             className={activeView === 'admin' ? 'nav-btn active' : 'nav-btn'}
-            onClick={() => setActiveView('admin')}
+            onClick={() => setActiveViewDeferred('admin')}
           >
             Admin
           </button>
           <button
             className={activeView === 'developer' ? 'nav-btn active' : 'nav-btn'}
-            onClick={() => setActiveView('developer')}
+            onClick={() => setActiveViewDeferred('developer')}
           >
             Developer Tools
           </button>
@@ -473,10 +544,10 @@ function App() {
                   and measurable farmer outcomes.
                 </p>
                 <div className="hero-actions">
-                  <button className="primary-btn" onClick={() => setActiveView('draft')}>
+                  <button className="primary-btn" onClick={() => setActiveViewDeferred('draft')}>
                     Start Benefit Draft
                   </button>
-                  <button className="secondary-btn" onClick={() => setActiveView('sync')}>
+                  <button className="secondary-btn" onClick={() => setActiveViewDeferred('sync')}>
                     Open Sync Console
                   </button>
                 </div>
@@ -514,7 +585,7 @@ function App() {
                 <button
                   key={module.title}
                   className="showcase-card"
-                  onClick={() => setActiveView(module.view)}
+                  onClick={() => setActiveViewDeferred(module.view)}
                 >
                   <span className="showcase-title">{module.title}</span>
                   <span className="showcase-subtitle">{module.subtitle}</span>

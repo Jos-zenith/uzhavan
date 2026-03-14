@@ -45,7 +45,7 @@ export function AtmaTrainingRegistrationScreen() {
   };
 
   return (
-    <section style={{ padding: 16 }}>
+    <section className="service-screen">
       <h2>ATMA Training Registration (#17)</h2>
       <p>Register for upcoming trainings and queue drafts offline.</p>
       <p>

@@ -129,14 +129,14 @@
 
 .brand-tagline {
   margin: 8px 0 0;
-  color: #9fd7ff;
+  color: #b8e5ff;
   font-size: 0.96rem;
   font-weight: 600;
 }
 
 .status-text {
   margin: 6px 0 0;
-  color: #8aa7cc;
+  color: #c8dcf5;
 }
 
 .connectivity-chip {
@@ -159,7 +159,7 @@
   border-radius: 10px;
   padding: 9px 14px;
   background: rgba(15, 24, 40, 0.85);
-  color: #bcd8f5;
+  color: #d9ebff;
   cursor: pointer;
   font-weight: 700;
   transition: transform 0.2s ease, background 0.2s ease;
@@ -401,7 +401,7 @@
 
 .prompt-box {
   border: 1px solid rgba(120, 168, 240, 0.4);
-  background: rgba(12, 24, 44, 0.8);
+  background: rgba(10, 22, 42, 0.92);
   border-radius: 12px;
   padding: 14px;
   margin: 0 0 12px;
@@ -420,8 +420,8 @@
 .prompt-actions button {
   border: 1px solid rgba(120, 168, 240, 0.45);
   border-radius: 8px;
-  background: rgba(15, 24, 40, 0.9);
-  color: #d5e7ff;
+  background: rgba(13, 25, 44, 0.95);
+  color: #eef6ff;
   padding: 8px 12px;
   cursor: pointer;
 }
@@ -436,7 +436,7 @@
   display: flex;
   flex-direction: column;
   margin-bottom: 10px;
-  color: #d3e5ff;
+  color: #e7f1ff;
 }
 
 .draft-form input,
@@ -444,15 +444,32 @@
 select {
   margin-top: 6px;
   padding: 10px 12px;
-  border: 1px solid rgba(120, 168, 240, 0.45);
+  border: 1px solid rgba(145, 187, 250, 0.6);
   border-radius: 10px;
-  background: rgba(9, 15, 26, 0.9);
-  color: #e6f1ff;
+  background: rgba(6, 13, 24, 0.96);
+  color: #f3f8ff;
+}
+
+.draft-form input::placeholder,
+.services-toolbar input::placeholder {
+  color: #a8bfdc;
+}
+
+.draft-form input:focus,
+.services-toolbar input:focus,
+select:focus,
+.nav-btn:focus,
+.prompt-actions button:focus,
+.ghost-btn:focus,
+.primary-btn:focus,
+.secondary-btn:focus {
+  outline: 2px solid #7bc9ff;
+  outline-offset: 2px;
 }
 
 .saved-meta {
   margin: 8px 0 0;
-  color: #8aa7cc;
+  color: #c2d8f3;
 }
 
 .stage-grid {
@@ -591,12 +608,97 @@ select {
 
 .service-card p {
   margin: 5px 0;
-  color: #b2c9e6;
+  color: #d3e2f5;
 }
 
 .roi-panel {
   padding: 0;
   overflow: hidden;
+}
+
+.service-screen {
+  padding: 16px;
+  border-radius: 14px;
+  background: #f4f8ff;
+  color: #13253f;
+}
+
+.service-screen h2,
+.service-screen h3 {
+  color: #13253f;
+  margin-top: 0;
+}
+
+.service-screen p,
+.service-screen li,
+.service-screen label,
+.service-screen th,
+.service-screen td,
+.service-screen strong,
+.service-screen span {
+  color: #20334f;
+}
+
+.service-screen table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.service-screen th,
+.service-screen td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #d8e2f1;
+  text-align: left;
+}
+
+.service-screen th {
+  background: #e7f0fd;
+  color: #0f2748;
+  font-weight: 700;
+}
+
+.service-screen tr:last-child td {
+  border-bottom: none;
+}
+
+.service-screen input,
+.service-screen textarea,
+.service-screen select,
+.service-screen button {
+  border-radius: 10px;
+  border: 1px solid #98afd0;
+  padding: 10px 12px;
+  font: inherit;
+}
+
+.service-screen input,
+.service-screen textarea,
+.service-screen select {
+  background: #ffffff;
+  color: #13253f;
+}
+
+.service-screen button {
+  background: #143c76;
+  color: #ffffff;
+  border-color: #143c76;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.service-screen button:hover {
+  background: #0f315f;
+}
+
+.service-screen input:focus,
+.service-screen textarea:focus,
+.service-screen select:focus,
+.service-screen button:focus {
+  outline: 2px solid #4d8de8;
+  outline-offset: 1px;
 }
 
 @keyframes pulse {

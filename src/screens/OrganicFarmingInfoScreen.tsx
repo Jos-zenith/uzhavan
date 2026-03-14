@@ -42,7 +42,7 @@ export function OrganicFarmingInfoScreen() {
   }, []);
 
   return (
-    <section style={{ padding: 16 }}>
+    <section className="service-screen">
       <h2>Organic Farming Info (#14)</h2>
       <p>Directory of traders and certification agencies for organic producers.</p>
       <p>

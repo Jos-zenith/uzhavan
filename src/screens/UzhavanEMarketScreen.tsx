@@ -50,7 +50,7 @@ export function UzhavanEMarketScreen() {
   };
 
   return (
-    <section style={{ padding: 16 }}>
+    <section className="service-screen">
       <h2>Uzhavan e-Market (#18)</h2>
       <p>Create produce listings and queue them for online posting.</p>
       <p>

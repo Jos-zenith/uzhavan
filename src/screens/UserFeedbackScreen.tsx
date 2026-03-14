@@ -31,7 +31,7 @@ export function UserFeedbackScreen() {
   };
 
   return (
-    <section style={{ padding: 16 }}>
+    <section className="service-screen">
       <h2>User Feedback (#12)</h2>
       <p>Offline-first feedback form with queued submission.</p>
       <p>

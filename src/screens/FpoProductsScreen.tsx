@@ -29,13 +29,13 @@ export function FpoProductsScreen() {
   }, []);
 
   return (
-    <section style={{ padding: 16 }}>
+    <section className="service-screen">
       <h2>FPO Products (#15)</h2>
       <p>Browse Farmer Producer Organization catalog with offline snapshots.</p>
       <p>
         Catalog cache: <strong>{cachePayload ? 'Loaded' : 'Unavailable'}</strong>
       </p>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <table>
         <thead>
           <tr>
             <th>Product</th>

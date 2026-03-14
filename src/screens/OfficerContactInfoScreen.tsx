@@ -21,13 +21,13 @@ export function OfficerContactInfoScreen() {
   }, []);
 
   return (
-    <section style={{ padding: 16 }}>
+    <section className="service-screen">
       <h2>Officer Contact Info (#9)</h2>
       <p>District/block officer directory with scheduled field visit days.</p>
       <p>
         Cached profile: <strong>{cachePayload ? 'Available' : 'Unavailable'}</strong>
       </p>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <table>
         <thead>
           <tr>
             <th>Designation</th>
