@@ -1,69 +1,130 @@
-﻿# VICT Digital Agriculture Platform
+# VICT Digital Agriculture Platform (victo-sdk)
 
-Offline-first agriculture service platform for Tamil Nadu with policy-enforced telemetry, ROI analytics, and modular SDK architecture.
+Offline-first digital agriculture platform built for Tamil Nadu workflows, with standardized telemetry, KPI governance, and ROI analytics.
+
+Production deployment: https://victo-sdk.vercel.app
+
+## Why This Project
+
+Many field operations run in low-connectivity environments, and feature impact is often hard to prove due to inconsistent metrics capture.
+
+This project solves both problems:
+
+- Delivers farmer-facing services that continue to work with intermittent network.
+- Enforces a common telemetry and KPI process so feature value can be measured consistently.
+- Provides ROI-ready data and governance workflows to support evidence-based product decisions.
+
+## Core Capabilities
+
+- Offline-first service workflows with local persistence.
+- Sync queue with retry and status tracking.
+- Standardized feature instrumentation and telemetry schema.
+- KPI catalog support and feature-level impact tracking.
+- ROI computation layer for value and cost analysis.
+- Governance checks for release readiness (measure before ship).
+
+## Service Coverage
+
+The app includes multiple agriculture-oriented service modules, including:
+
+- Benefit registration support
+- Fertilizer stock lookup
+- Seed stock lookup
+- Machinery and mechanic discovery
+- Market price access
+- Weather and reservoir insights
+- Officer directory and service information
+- Agriculture news and pest identification support
+
+## Tech Stack
+
+- Frontend: React 19, TypeScript, CRACO
+- Cross-platform compatibility: React Native Web, Expo
+- Offline storage: expo-sqlite
+- Analytics/telemetry: posthog-js
+- Data utilities: xlsx
+- Security utilities: crypto-js
+- Testing: Jest + Testing Library
+- Hosting: Vercel
+
+## Project Structure
+
+- `src/` - application screens, services, state logic
+- `src/sdk/` - telemetry, governance, process, attribution, ROI modules
+- `src/sdkHooks/` - SDK integration hooks
+- `public/data/` - JSON service datasets used by the app
+- `data/` - source CSV/XLSX data assets
+- `scripts/` - setup verification tooling
+- `docs/` - project documentation pages
 
 ## Documentation
 
 - [Documentation Index](docs/INDEX.md)
-- [Installation & Project Setup](docs/INSTALLATION.md)
+- [Installation Guide](docs/INSTALLATION.md)
 - [SDK Framework](SDK_FRAMEWORK.md)
-- [Policy Enforcement Implementation](POLICY_ENFORCEMENT_IMPLEMENTATION.md)
-- [Policy-First Migration Guide](POLICY_FIRST_MIGRATION.md)
 
-## Quick Start
+## Local Setup
 
 ### Prerequisites
 
 - Node.js 18+
 - npm 9+
 
-### 1) Install dependencies
+### Install dependencies
 
 ```bash
 npm install
 ```
 
-### 2) Validate workspace
+### Validate workspace
 
 ```bash
 npm run setup:verify
 ```
 
-### 3) Start development server
+### Start development server
 
 ```bash
 npm start
 ```
 
-### 4) Build production bundle
+### Build production bundle
 
 ```bash
 npm run build
 ```
 
-## Project Highlights
+## Available Scripts
 
-- Policy-first telemetry: every event must map to a pre-defined business policy
-- Offline queue with retry and auto-flush
-- Dataset snapshot caching with TTL
-- ROI engine and governance workflows for release readiness
-
-## Scripts
-
-- `npm run setup:project` - full setup validation with next-step guidance
+- `npm run setup:project` - full setup check with actionable output
 - `npm run setup:verify` - verification-only setup checks
-- `npm start` - run local dev server
-- `npm run build` - create production build
-- `npm test` - run tests
+- `npm start` - starts local dev server
+- `npm run build` - creates production build
+- `npm test` - runs tests
+- `npm run docs:start` - serves docs site locally
+- `npm run docs:build` - builds docs site
 
-## Folder Map
+## Deployment (Vercel)
 
-- `src/` - React application screens and services
-- `src/sdk/` - SDK modules (telemetry, policy, governance, ROI, storage)
-- `data/` - local data assets and CSV/XLSX files
-- `docs/` - installation and documentation index pages
-- `scripts/` - setup and tooling scripts
+This repository is configured for a Create React App style build.
 
-## Support
+- Build command: `npm run build`
+- Output directory: `build`
+- SPA routing rewrite: all routes -> `index.html`
 
-If setup fails, start with [Installation & Project Setup](docs/INSTALLATION.md), then check policy docs for telemetry migration requirements.
+Current production alias:
+
+- https://victo-sdk.vercel.app
+
+## KPI and ROI Operating Context
+
+This project aligns with a standardized product measurement model (TNI26073 direction):
+
+- Every feature should define business outcomes and KPIs before implementation.
+- Instrumentation should use a shared event contract and SDK layer.
+- Attribution and ROI analysis should be done from a central analytics model.
+- Releases should meet baseline instrumentation criteria before go-live.
+
+This ensures product decisions are data-driven, comparable across features, and tied to measurable value.
+
+
